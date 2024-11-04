@@ -487,7 +487,7 @@
                                 <li v-for="item in footerNavigation.solutions" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -497,7 +497,7 @@
                                 <li v-for="item in footerNavigation.support" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -509,7 +509,7 @@
                                 <li v-for="item in footerNavigation.company" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -519,7 +519,7 @@
                                 <li v-for="item in footerNavigation.legal" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -532,6 +532,7 @@
 
 <script setup>
 //main imports
+debug;
 import { ref, h, defineComponent } from 'vue';
 import {
     Dialog, DialogPanel, Disclosure, DisclosureButton,
