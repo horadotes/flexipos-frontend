@@ -132,11 +132,13 @@
                                 </FormButton>
                             </div>
                             <div class="w-1/2">
-                                <FormButton v-if="payment.payment_type === 'cheque'" button-style="xxx">Add Cheque
+                                <FormButton v-if="payment.payment_type === 'cheque'" button-style="xxx"
+                                    @click="toggleForm">Add Cheque
                                 </FormButton>
                                 <FormLabel v-if="payment.payment_type === 'cheque'" label="Cheque Amount" />
-                                <FormNumberField v-if="payment.payment_type === 'cheque'" v-model="payment.cheque"
-                                    name="chequeamount" placeholder="Cheque Amount" />
+                                <FormNumberField v-if="payment.payment_type === 'cheque'"
+                                    v-model="formattedChequeAmount" name="chequeamount" placeholder="Cheque Amount"
+                                    readonly />
                                 <FormLabel v-if="payment.payment_type === 'gcash'" label="Gcash Amount" />
                                 <FormNumberField v-if="payment.payment_type === 'gcash'" v-model="payment.gcash"
                                     name="gcashamount" placeholder="Gcash Amount" />
@@ -149,7 +151,7 @@
                                 <FormLabel label="Total Amount" />
                                 <FormNumberField v-model="formattedPaymentAmount" name="totalamount"
                                     placeholder="Total Amount" readonly />
-                                <FormLabel label="Total Payment Amount" />
+                                <FormLabel label="Amount To Pay" />
                                 <FormNumberField v-model="formattedTotalAmountToPay" name="totalamount"
                                     placeholder="Amount to Pay" readonly />
                             </div>
@@ -172,13 +174,22 @@
                                         <template #body v-if="!state.isTableLoading && state.cheques?.data.length">
                                             <tr v-for="(cheque, index) in state.cheques?.data" :key="index">
                                                 <td class="pl-3">
-                                                    {{ cheque.id }}
+                                                    {{ cheque.voucher_number }}
                                                 </td>
                                                 <td class="pl-3">
-                                                    {{ cheque.purchase_order_no }}
+                                                    {{ cheque.payee }}
                                                 </td>
                                                 <td class="pl-3">
-                                                    {{ cheque.bill_date }}
+                                                    {{ cheque.bank }}
+                                                </td>
+                                                <td class="pl-3">
+                                                    {{ cheque.cheque_number }}
+                                                </td>
+                                                <td class="pl-3">
+                                                    {{ cheque.cheque_date }}
+                                                </td>
+                                                <td class="pl-3">
+                                                    {{ cheque.amount }}
                                                 </td>
                                             </tr>
                                         </template>
@@ -236,6 +247,45 @@
                         </div>
                     </div>
                 </div>
+                <!-- Category Form -->
+                <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                        <form @submit.prevent="addCheque()">
+                            <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
+                                <!-- Category Name Field -->
+                                <div class="mb-1">
+                                    <FormLabel label="Voucher Number" />
+                                    <FormTextField id="vouchernum" name="vouchernum"
+                                        v-model="chequeDetail.voucher_number" placeholder="Voucher Number" required />
+                                    <FormLabel label="Payee" />
+                                    <FormTextField id="payee" name="payee" v-model=chequeDetail.payee
+                                        placeholder="Payee" />
+                                    <FormLabel label="Bank" />
+                                    <FormTextField id="bank" name="bank" v-model="chequeDetail.bank" placeholder="Bank"
+                                        required />
+                                    <FormLabel label="Cheque Number" />
+                                    <FormTextField id="chequenumber" name="chequenumber"
+                                        v-model="chequeDetail.cheque_number" placeholder="Cheque Number" required />
+                                    <FormLabel label="Cheque Date" />
+                                    <FormTextField type="date" id="chequedate" name="chequedate"
+                                        v-model="chequeDetail.cheque_date" placeholder="Cheque Date" required />
+                                    <FormLabel label="Amount" />
+                                    <FormNumberField id="amount" name="amount" v-model="chequeDetail.amount"
+                                        placeholder="Amount" required />
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="flex justify-end gap-2 mt-4">
+                                    <FormButton type="submit" buttonStyle="success" class="w-full">
+                                        Save
+                                    </FormButton>
+                                    <FormButton @click="toggleForm" buttonStyle="xxx" class="w-full">
+                                        Cancel
+                                    </FormButton>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </main>
         </NuxtLayout>
     </div>
@@ -249,6 +299,7 @@ import { billService } from '~/components/api/admin/BillService';
 import { useI18n } from 'vue-i18n';
 import { billPaymentService } from '~/components/api/admin/BillPaymentService';
 import { billPaymentDetailService } from '~/components/api/admin/BillPaymentDetailService';
+import { billPaymentChequeService } from '~/components/api/admin/BillPaymentChequeService';
 
 // Alert and i18n setup
 const { successAlert } = useAlert();
@@ -268,10 +319,6 @@ interface UnpaidBill {
 }
 
 interface SelectedBill {
-    data: any[];
-}
-
-interface Cheques {
     data: any[];
 }
 
@@ -302,6 +349,14 @@ const isPaymentAmountValid = computed(() => {
     return paymentAmountNumber.value > 0;
 });
 
+const totalChequeAmount = computed(() => {
+    return state.cheques?.data.reduce((total, cheque) => total + Number(cheque.amount), 0);
+});
+
+const formattedChequeAmount = computed(() => {
+    return totalChequeAmount.value.toFixed(2);
+});
+
 const totalAmountToPay = computed(() => {
     return state.selectedBills?.data.reduce((total, bill) => total + Number(bill.paymentamount), 0);
 });
@@ -321,7 +376,7 @@ const formattedPaymentAmount = computed({
 
 const paymentAmountNumber = computed({
     get() {
-        return Number(payment.gcash) + Number(payment.cheque) + Number(payment.cash);
+        return Number(payment.gcash) + Number(totalChequeAmount.value) + Number(payment.cash);
     },
     set(value) {
         payment.amount = value.toString();
@@ -465,8 +520,11 @@ const state = reactive({
         { name: "Payment Amount", sorter: true, key: "paymentamount" },
     ],
     chequeDetailColumnHeader: [
-        { name: "Cheque Number", sorter: true, key: "chequeNumber" },
-        { name: "Cheque Date", sorter: true, key: "chequeDate" },
+        { name: "Voucher Number", sorter: true, key: "voucher_number" },
+        { name: "Payee", sorter: true, key: "payee" },
+        { name: "Bank", sorter: true, key: "bank" },
+        { name: "Cheque Number", sorter: true, key: "cheque_number" },
+        { name: "Cheque Date", sorter: true, key: "cheque_date" },
         { name: "Amount", sorter: true, key: "amount" },
     ],
     isTableLoading: false,
@@ -502,6 +560,42 @@ function selectBill(bill: Bill) {
         selectedbillinput.amount = selectedBill.amount;
     }
 }
+
+interface Cheques {
+    data: any[];
+}
+
+const chequeDetail = reactive({
+    voucher_number: '',
+    payee: '',
+    bank: '',
+    cheque_number: '',
+    cheque_date: '',
+    amount: '',
+});
+
+function addCheque() {
+    const newCheque: Cheque = {
+        voucher_number: chequeDetail.voucher_number,
+        payee: chequeDetail.payee,
+        bank: chequeDetail.bank,
+        cheque_number: chequeDetail.cheque_number,
+        cheque_date: chequeDetail.cheque_date,
+        amount: chequeDetail.amount,
+    };
+
+    state.cheques.data.push(newCheque);
+    showForm.value = false;
+
+    // Optionally clear the form
+    chequeDetail.voucher_number = '';
+    chequeDetail.payee = '';
+    chequeDetail.bank = '';
+    chequeDetail.cheque_number = '';
+    chequeDetail.cheque_date = '';
+    chequeDetail.amount = '';
+}
+
 function addBillsPaymentDetail() {
     console.log("selected bill amount to pay input: ", selectedbillinput.amount_to_pay);
     console.log("selected bill amount input: ", selectedbillinput.amount);
@@ -536,7 +630,7 @@ async function makePayment() {
             approved_by_id: makepayment.approved_by_id,
             cancelled_by_id: makepayment.cancelled_by_id,
             payment_date: makepayment.date,
-            payment_type: makepayment.payment_type,
+            payment_type: payment.payment_type,
             cash_voucher_no: makepayment.cash_voucher_no,
             is_cancelled: payment.is_cancelled,
         };
@@ -575,14 +669,32 @@ async function makePayment() {
         } else {
             errorAlert(t('Error'), t('Failed to create bill.'));
         }
+        console.log(payment.payment_type);
 
-        if (makepayment.payment_type === 'cheque') {
+        if (payment.payment_type === 'cheque') {
             console.log('inserting cheque details to db');
-        }
-        else {
+            for (const cheque of state.cheques.data) {
+                const chequeData = {
+                    bills_payment_id: response.data.id,
+                    check_voucher_no: cheque.voucher_number,
+                    payee: cheque.payee,
+                    bank_id: cheque.bank,
+                    cheque_number: cheque.cheque_number,
+                    cheque_date: cheque.cheque_date,
+                    amount: cheque.amount,
+                };
+                console.log('Cheque Data:', chequeData);
+                const chequeResult = await billPaymentChequeService.createBillPaymentCheque(chequeData);
+                if (chequeResult) {
+                    console.log('Cheque saved successfully:', chequeResult);
+                } else {
+                    console.error('Failed to save cheque:', chequeData);
+                }
+            }
+        } else {
             console.log('cash payment no need to save cheque details.');
         }
-        navigateTo('/admin/payments');
+        // navigateTo('/admin/payments');
     }
     catch (error: any) {
         console.error('Error saving bill:', error.message);
@@ -625,6 +737,12 @@ watch(
         }
     }
 );
+
+const showForm = ref(false);
+
+function toggleForm() {
+    showForm.value = !showForm.value;
+}
 
 // Fetch suppliers when the component is mounted
 onMounted(() => {
