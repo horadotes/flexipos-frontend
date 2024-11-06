@@ -694,7 +694,7 @@ async function makePayment() {
         } else {
             console.log('cash payment no need to save cheque details.');
         }
-        // navigateTo('/admin/payments');
+        navigateTo('/admin/payments');
     }
     catch (error: any) {
         console.error('Error saving bill:', error.message);
