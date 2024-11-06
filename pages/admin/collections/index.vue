@@ -2,6 +2,10 @@
     <div>
         <NuxtLayout name="admin">
             <main>
+
+                <Head>
+                    <Title>Bills Payment - {{ runtimeConfig.public.appName }}</Title>
+                </Head>
                 <!-- Search and Add Collection Button Container -->
                 <div class="relative flex items-center space-x-4 mt-3">
                     <!-- Search Bar -->
@@ -104,6 +108,7 @@
 import { ref, computed } from 'vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 
+const runtimeConfig = useRuntimeConfig();
 const showForm = ref(false);
 const collection = ref({
     collection_type: '',

@@ -1,7 +1,11 @@
 <template>
     <div>
         <NuxtLayout name="admin">
-            <main>
+            <main class="w-full mx-auto">
+
+                <Head>
+                    <Title>Bills Payment - {{ runtimeConfig.public.appName }}</Title>
+                </Head>
                 <!-- Search and Add Product Button Container -->
                 <div class="relative flex items-center space-x-4 mt-3">
                     <!-- Search Bar -->
@@ -57,16 +61,13 @@
                                     </td>
                                     <td class="pl-3">
                                         <div class="flex space-x-2">
-                                            <button @click="viewBill(bill.id)"
-                                                class="text-gray-600 hover:text-gray-900">
+                                            <button @click="" class="text-gray-600 hover:text-gray-900">
                                                 View
                                             </button>
-                                            <button @click="editBill(bill.id)"
-                                                class="text-gray-600 hover:text-gray-900">
+                                            <button @click="" class="text-gray-600 hover:text-gray-900">
                                                 Edit
                                             </button>
-                                            <button @click="deleteBill(bill.id)"
-                                                class="text-red-600 hover:text-red-900">
+                                            <button @click="" class="text-red-600 hover:text-red-900">
                                                 Cancel
                                             </button>
                                         </div>
@@ -88,6 +89,8 @@ import { PlusIcon } from '@heroicons/vue/24/outline';
 import { billPaymentService } from '~/components/api/admin/BillPaymentService';
 import { employeeService } from '~/components/api/admin/EmployeeService';
 
+const runtimeConfig = useRuntimeConfig();
+
 interface BillPayment {
     data: any[];
 }
@@ -100,7 +103,6 @@ interface SortData {
 }
 
 function sort(sortingData: { column: string; sort: string }) {
-    currentTablePage = 1;
     if (sortingData.sort === 'ascend' || sortingData.sort === 'descend') {
         state.sortData = {
             sortField: sortingData.column,
@@ -140,7 +142,6 @@ async function fetchEmployees() {
         state.employees = response.data; // Assuming the response structure contains the employee data
     } catch (error) {
         console.error('Failed to fetch employees:', error);
-        state.error = error;
     }
 }
 
@@ -148,57 +149,25 @@ async function fetchEmployees() {
 async function fetchBillsPayment() {
     state.error = null;
     state.isTableLoading = true;
-    fetchEmployees();
+    await fetchEmployees();
     try {
         const response = await billPaymentService.getBillPayments();
-        state.billPayment = response; // Store the fetched bill payments
+        state.billPayment = response;
 
-        // Map employee IDs to names
         state.billPayment.data.forEach(billpayment => {
-            const preparedBy = state.employees.find(emp => emp.id === billpayment.prepared_by_id);
-            const approvedBy = state.employees.find(emp => emp.id === billpayment.approved_by_id);
-            const cancelledBy = state.employees.find(emp => emp.id === billpayment.cancelled_by_id);
+            const preparedBy = state.employees.find(emp => (emp as any).id === billpayment.prepared_by_id);
+            const approvedBy = state.employees.find(emp => (emp as any).id === billpayment.approved_by_id);
+            const cancelledBy = state.employees.find(emp => (emp as any).id === billpayment.cancelled_by_id);
 
-            billpayment.prepared_by_id = preparedBy ? `${preparedBy.firstname} ${preparedBy.lastname}` : '';
-            billpayment.approved_by_id = approvedBy ? `${approvedBy.firstname} ${approvedBy.lastname}` : '';
-            billpayment.cancelled_by_id = cancelledBy ? `${cancelledBy.firstname} ${cancelledBy.lastname}` : '';
+            billpayment.prepared_by_id = preparedBy ? `${(preparedBy as any).firstname} ${(preparedBy as any).lastname}` : '';
+            billpayment.approved_by_id = approvedBy ? `${(approvedBy as any).firstname} ${(approvedBy as any).lastname}` : '';
+            billpayment.cancelled_by_id = cancelledBy ? `${(cancelledBy as any).firstname} ${(cancelledBy as any).lastname}` : '';
         });
     } catch (error: any) {
         state.error = error;
     }
     state.isTableLoading = false;
 }
-
-
-function toggleForm() {
-    showForm.value = !showForm.value;
-    if (!showForm.value) {
-        editingIndex.value = null;
-        resetPaymentForm();
-    }
-}
-
-function resetPaymentForm() {
-    payment.value = {
-        payment_type: '',
-        payment_date: '',
-        supplier: '',
-        cash_voucher_no: '',
-        is_cancelled: 'No',
-        prepared_by_id: ''
-    };
-}
-
-function editPayment(index: number) {
-    payment.value = { ...payments.value[index] };
-    editingIndex.value = index;
-    showForm.value = true; // Open the form for editing.
-}
-
-function deletePayment(index: number) {
-    payments.value.splice(index, 1);
-}
-
 // function previousPage() {
 //     if (currentPage.value > 1) {
 //         currentPage.value--;

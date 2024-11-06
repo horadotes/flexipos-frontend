@@ -13,7 +13,7 @@ class SupplierService extends BaseAPIService {
 
     // Create a new supplier
     async createSupplier(params: object): Promise<any> {
-        return await this.request(`/admin/suppliers/`, "POST", params);
+        return await this.request(`/admin/suppliers`, "POST", params);
     }
 
     // Update an existing supplier

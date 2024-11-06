@@ -116,31 +116,36 @@
                             <div class="w-1/2">
                                 <label class="block text-xs font-medium text-gray-700">Barcode</label>
                                 <input v-model.number="salesInvoiceDetail.barcode" type="text" placeholder="barcode"
-                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3" />
+                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3 cursor-default"
+                                    readonly />
                             </div>
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="w-1/2">
                                 <label class="block text-xs font-medium text-gray-700">Unit</label>
                                 <input v-model.number="salesInvoiceDetail.unit" type="text" placeholder="unit"
-                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3" />
+                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3 cursor-default"
+                                    readonly />
                             </div>
                             <div class="w-1/2">
                                 <label class="block text-xs font-medium text-gray-700">Expiry Date</label>
                                 <input v-model.number="salesInvoiceDetail.expiry_date" type="text"
                                     placeholder="expiry date"
-                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3" />
+                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3 cursor-default"
+                                    readonly />
                             </div>
                         </div>
                         <div class="flex items-center space-x-4">
                             <div class="w-1/2">
-                                <label class="block text-xs font-medium text-gray-700">Quantity</label>
-                                <input v-model.number="salesInvoiceDetail.quantity" type="text" placeholder="quantity"
+                                <label class="block text-xs font-medium text-gray-700">Quantity <span
+                                        class="text-xs font-thin">stock available:</span> <span class="text-red-400"> {{
+                                            stock }}</span></label>
+                                <input v-model.number="salesInvoiceDetail.quantity" type="number" placeholder="quantity"
                                     class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3" />
                             </div>
                             <div class="w-1/2">
                                 <label class="block text-xs font-medium text-gray-700">Price</label>
-                                <input v-model.number="salesInvoiceDetail.price" type="text" placeholder="price"
+                                <input v-model.number="salesInvoiceDetail.price" type="number" placeholder="price"
                                     class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3" />
                             </div>
                         </div>
@@ -240,6 +245,7 @@ import { salesInvoiceDetailService } from '~/components/api/admin/SalesInvoiceDe
 const user_id = computed(() => localStorage.getItem('user_id'));
 const firstname = computed(() => localStorage.getItem('firstname'));
 const lastname = computed(() => localStorage.getItem('lastname'));
+let stock = '';
 
 // Alert and i18n setup
 const { successAlert } = useAlert();
@@ -275,6 +281,7 @@ interface Product {
     wholesale_unit: string;
     name: string;
     expiry_date: string;
+    quantity_onhand: string;
     is_active: boolean;
 }
 
@@ -585,6 +592,7 @@ watch(
             salesInvoiceDetail.value.barcode = selectedProduct.barcode;
             salesInvoiceDetail.value.unit = selectedProduct.wholesale_unit;
             salesInvoiceDetail.value.expiry_date = selectedProduct.expiry_date; // Update expiry_date if the selected product exists
+            stock = selectedProduct.quantity_onhand;
         } else {
             salesInvoiceDetail.value.product_name = ''; // Reset name if no product is selected
             salesInvoiceDetail.value.barcode = ''; // Reset barcode if no product is selected

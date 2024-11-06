@@ -322,6 +322,10 @@ interface SelectedBill {
     data: any[];
 }
 
+interface Cheques {
+    data: any[];
+}
+
 interface SortData {
     sortField: string;
     sortOrder: "ascend" | "descend" | null;
@@ -550,7 +554,7 @@ async function fetchSuppliers() {
     }
 }
 
-function selectBill(bill: Bill) {
+function selectBill(bill: any) {
     const selectedBill = state.unpaidBills.data.find((b) => b.id === bill.id);
     if (selectedBill) {
         // Populate selectedbillinput with the selected bill's data
@@ -559,10 +563,6 @@ function selectBill(bill: Bill) {
         selectedbillinput.bill_date = selectedBill.bill_date;
         selectedbillinput.amount = selectedBill.amount;
     }
-}
-
-interface Cheques {
-    data: any[];
 }
 
 const chequeDetail = reactive({
@@ -575,7 +575,7 @@ const chequeDetail = reactive({
 });
 
 function addCheque() {
-    const newCheque: Cheque = {
+    const newCheque = {
         voucher_number: chequeDetail.voucher_number,
         payee: chequeDetail.payee,
         bank: chequeDetail.bank,
@@ -604,7 +604,7 @@ function addBillsPaymentDetail() {
         return; // Early return to prevent adding the bill
     }
 
-    const newBill: Bill = {
+    const newBill = {
         id: selectedbillinput.bill_id,
         purchase_order_no: selectedbillinput.purchase_order_no,
         bill_date: selectedbillinput.bill_date,
