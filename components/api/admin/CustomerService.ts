@@ -13,7 +13,7 @@ class CustomerService extends BaseAPIService {
 
     // Create a new customer
     async createCustomer(params: object): Promise<any> {
-        return await this.request(`/admin/customers/`, "POST", params);
+        return await this.request(`/admin/customers`, "POST", params);
     }
 
     // Update an existing customer

@@ -13,7 +13,7 @@ class EmployeeService extends BaseAPIService {
 
     // Create a new employee
     async createEmployee(params: object): Promise<any> {
-        return await this.request(`/admin/employees/`, "POST", params);
+        return await this.request(`/admin/employees`, "POST", params);
     }
 
     // Update an existing employee

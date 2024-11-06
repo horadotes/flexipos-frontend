@@ -13,7 +13,7 @@ class PaymentDetailService extends BaseAPIService {
 
     // Create a new payment detail
     async createPaymentDetail(params: object): Promise<any> {
-        return await this.request(`/admin/payment_details/`, "POST", params);
+        return await this.request(`/admin/payment_details`, "POST", params);
     }
 
     // Update an existing payment detail

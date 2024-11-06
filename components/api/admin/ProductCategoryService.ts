@@ -15,7 +15,7 @@ class ProductCategoryService extends BaseAPIService {
 
     // Create a new product category
     async createProductCategory(params: object): Promise<any> {
-        return await this.request(`/admin/product_categories/`, 'POST', params);
+        return await this.request(`/admin/product_categories`, 'POST', params);
     }
 
     // Update an existing product category

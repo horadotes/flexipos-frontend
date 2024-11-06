@@ -13,7 +13,7 @@ class BillDetailService extends BaseAPIService {
 
     // Create a new product
     async createBillDetails(params: object): Promise<any> {
-        return await this.request(`/admin/billdetails/`, "POST", params);
+        return await this.request(`/admin/billdetails`, "POST", params);
     }
 
     // Update an existing product

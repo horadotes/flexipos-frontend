@@ -13,7 +13,7 @@ class PaymentService extends BaseAPIService {
 
     // Create a new payment
     async createPayment(params: object): Promise<any> {
-        return await this.request(`/admin/payments/`, "POST", params);
+        return await this.request(`/admin/payments`, "POST", params);
     }
 
     // Update an existing payment
