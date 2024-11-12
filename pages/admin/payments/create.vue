@@ -278,7 +278,7 @@
                                     <FormButton type="submit" buttonStyle="success" class="w-full">
                                         Save
                                     </FormButton>
-                                    <FormButton @click="toggleForm" buttonStyle="xxx" class="w-full">
+                                    <FormButton @click="toggleForm()" buttonStyle="xxx" class="w-full">
                                         Cancel
                                     </FormButton>
                                 </div>
@@ -296,10 +296,10 @@ import { reactive, onMounted } from 'vue';
 import type { Error } from '@/types/error';
 import { supplierService } from '~/components/api/admin/SupplierService';
 import { billService } from '~/components/api/admin/BillService';
-import { useI18n } from 'vue-i18n';
 import { billPaymentService } from '~/components/api/admin/BillPaymentService';
 import { billPaymentDetailService } from '~/components/api/admin/BillPaymentDetailService';
 import { billPaymentChequeService } from '~/components/api/admin/BillPaymentChequeService';
+import { useI18n } from 'vue-i18n';
 
 // Alert and i18n setup
 const { successAlert } = useAlert();

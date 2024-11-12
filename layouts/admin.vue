@@ -104,7 +104,7 @@
                             </ul>
                         </li>
                         <li class="mt-auto">
-                            <a href="/settings"
+                            <a href="/admin/dashboard/settings"
                                 class="group -mx-2 flex gap-x-2 rounded-md p-2 text-xs font-semibold leading-4 text-gray-400 hover:bg-gray-800 hover:text-white">
                                 <Cog6ToothIcon class="h-5 w-5 shrink-0" aria-hidden="true" />
                                 <span class="text-xs">Settings</span>
@@ -272,7 +272,6 @@ const navigation = [
             { name: "Collections", href: "/admin/collections", icon: DocumentDuplicateIcon, current: false },
             { name: "Credit Memo", href: "/admin/creditmemo", icon: UserCircleIcon, current: false },
             { name: "Damages / Spoilage", href: "/admin/payments", icon: CreditCardIcon, current: false },
-            { name: "Replacement", href: "/admin/replacements", icon: UserCircleIcon, current: false },
         ],
     },
     { name: "Roles / Permissions", href: "/roles", icon: LockClosedIcon, current: false },
@@ -283,7 +282,6 @@ const navigation = [
             { name: "Supplier Returns", href: "/payments", icon: ArrowLongLeftIcon, current: false },
         ],
     },
-    { name: "Warehouse", href: "/roles", icon: HomeModernIcon, current: false },
     { name: "Reports", href: "/roles", icon: ChartBarSquareIcon, current: false },
 ];
 

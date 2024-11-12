@@ -125,6 +125,8 @@
 import { ref, computed } from 'vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 import { salesInvoiceService } from '~/components/api/admin/SalesInvoiceService';
+import { employeeService } from '~/components/api/admin/EmployeeService';
+import { customerService } from '~/components/api/admin/CustomerService';
 
 const runtimeConfig = useRuntimeConfig();
 let currentTablePage = 1;
@@ -138,26 +140,24 @@ interface SalesInvoice {
     data: any[];
 }
 
-// const salesInvoice = ref({
-//     id: '',
-//     branch_id: '',
-//     sales_order_id: '',
-//     customer_id: '',
-//     prepared_by_id: '',
-//     sales_representative: '',
-//     cancelled_by_id: '',
-//     approved_by_id: '',
-//     invoice_no: '',
-//     document_no: '',
-//     date: '',
-//     due_date: '',
-//     payment_type: 'Cash',
-//     terms: '0',
-//     is_cancelled: false,
-//     is_approved: false,
-//     remarks: '',
-//     total: '',
-// });
+interface Employee {
+    id: number;
+    firstname: string;
+    lastname: string;
+    username: string;
+    role: string;
+    is_active: boolean;
+}
+
+interface Customer {
+    id: number;
+    firstname: string;
+    lastname: string;
+    email: string;
+    phone: string;
+    address: string;
+    is_active: boolean; // Changed to boolean
+}
 
 const state = reactive({
     columnHeaders: [
@@ -181,6 +181,8 @@ const state = reactive({
     isTableLoading: false,
     sortData: { sortField: "", sortOrder: null } as SortData,
     salesInvoices: { data: [] } as SalesInvoice,
+    employees: [] as Employee[],
+    customers: [] as Customer[],
 });
 
 
@@ -201,6 +203,43 @@ function sort(sortingData: { column: string; sort: string }) {
     fetchSalesInvoice();
 }
 
+async function fetchEmployees() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await employeeService.getEmployees();
+        state.employees = response.data; // Adjust if necessary based on API response structure
+        state.salesInvoices.data.forEach(invoices => {
+            const selectedEmployee = state.employees.find(employee => employee.id === invoices.prepared_by_id);
+            invoices.prepared_by_id = selectedEmployee ? `${selectedEmployee.firstname} ${selectedEmployee.lastname}` : 'Unknown'; // Fallback if employee not found
+        });
+
+        state.salesInvoices.data.forEach(invoices => {
+            const selectedSalesRepresentative = state.employees.find(employee => employee.id === invoices.sales_representative);
+            invoices.sales_representative = selectedSalesRepresentative ? `${selectedSalesRepresentative.firstname} ${selectedSalesRepresentative.lastname}` : 'Unknown'; // Fallback if employee not found
+        })
+    } catch (error: any) {
+        state.error = error;
+    }
+    state.isTableLoading = false;
+}
+
+async function fetchCustomers() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await customerService.getCustomers();
+        state.customers = response.data; // Adjust if necessary based on API response structure
+        state.salesInvoices.data.forEach(invoices => {
+            const selectedCustomer = state.customers.find(customer => customer.id === invoices.customer_id);
+            invoices.customer_id = selectedCustomer ? `${selectedCustomer.firstname} ${selectedCustomer.lastname}` : 'Unknown'; // Fallback if employee not found
+        });
+    } catch (error: any) {
+        state.error = error;
+    }
+    state.isTableLoading = false;
+}
+
 async function fetchSalesInvoice() {
     state.isTableLoading = true;
     state.error = null;
@@ -211,6 +250,8 @@ async function fetchSalesInvoice() {
             sortOrder: state.sortData.sortOrder,
         };
         const response = await salesInvoiceService.getSalesInvoices();
+        fetchEmployees();
+        fetchCustomers();
         state.salesInvoices = response;
         console.log(response);
     } catch (error: any) {

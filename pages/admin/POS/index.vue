@@ -57,7 +57,8 @@
                                 <td class="py-2 px-4 border-b text-right">{{ item.price }}</td>
                                 <td class="py-2 px-4 border-b text-right">{{ item.quantity }}</td>
                                 <td class="py-2 px-4 border-b text-right">{{ item.discount }}</td>
-                                <td class="py-2 px-4 border-b text-right">{{ item.price * item.quantity }}</td>
+                                <td class="py-2 px-4 border-b text-right">{{ Number(item.price *
+                                    item.quantity).toFixed(2) }}</td>
                                 <td class="py-2 px-4 border-b text-right">
                                     <button @click="openQuantityForm(item.barcode, item.quantity)">Modify
                                         Quantity</button>
@@ -104,7 +105,7 @@
                         </li>
                         <li class="mb-1 flex justify-between font-bold">
                             <span>Total:</span>
-                            <span>{{ mostRecentItem.price * mostRecentItem.quantity }}</span>
+                            <span>{{ Number(mostRecentItem.price * mostRecentItem.quantity).toFixed(2) }}</span>
                         </li>
                     </ul>
                 </div>
@@ -146,7 +147,7 @@
                         </li>
                         <li class="mb-1 flex justify-between font-bold">
                             <span>Change:</span>
-                            <span> {{ calculateChange }}</span>
+                            <span> {{ calculateChange.toFixed(2) }}</span>
                         </li>
                         <li class="mb-1 mt-52 flex justify-between">
                             <span>CASHIER: </span>
@@ -326,6 +327,8 @@ import { useI18n } from 'vue-i18n';
 import { productService } from '~/components/api/admin/ProductService.js';
 import { paymentService } from '~/components/api/admin/PaymentService.js';
 import { paymentDetailService } from '~/components/api/admin/PaymentDetailService.js';
+import { salesInvoiceService } from '~/components/api/admin/SalesInvoiceService';
+import { salesInvoiceDetailService } from '~/components/api/admin/SalesInvoiceDetailService';
 
 
 // Alert and i18n setup
@@ -342,6 +345,8 @@ interface Item {
     quantity: number;
     discount: number;
     total: number;
+    expiry_date: string;
+    wholesale_unit: string;
 }
 
 interface Product {
@@ -351,6 +356,8 @@ interface Product {
     discount: number;
     markup: number;
     current_price: number;
+    expiry_date: string;
+    wholesale_unit: string;
 }
 
 // const area
@@ -555,11 +562,15 @@ function addItem() {
             let markup = product.markup; // Assuming markup is a percentage
             let markupamount = Number(currentprice) * (Number(markup) / 100); // Calculate the markup amount
             let thisprice = Number(currentprice) + Number(markupamount); // Calculate the total price including markup
+            let expiry = product.expiry_date;
+            let productunit = product.wholesale_unit;
 
             console.log("Markup: " + markup);
             console.log("Current Price: " + currentprice);
             console.log("Markup Amount: " + markupamount);
             console.log("Price fetched: " + thisprice);
+            console.log("Expiry Date: " + expiry);
+            console.log("Unit: " + productunit);
 
             // Check if the item already exists in the items array
             const existingItemIndex = items.value.findIndex(item => item.barcode === product.barcode);
@@ -585,6 +596,8 @@ function addItem() {
                     quantity: quantity,
                     discount: discount,
                     total: thisprice * quantity, // Calculate total using thisprice
+                    expiry_date: expiry,
+                    wholesale_unit: productunit,
                 });
             }
         } else {
@@ -613,50 +626,98 @@ async function savePayment() {
                 return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             };
 
+            const salesInvoiceData = {
+                branch_id: '',
+                sales_order_id: '',
+                customer_id: payment.value.customer_id,
+                prepared_by_id: user_id.value,
+                sales_representative: user_id.value,
+                cancelled_by_id: '',
+                approved_by_id: payment.value.is_approved || false,
+                invoice_no: '',
+                date: formatDateTime(new Date()),
+                due_date: formatDateTime(new Date()),
+                payment_type: 'cash',
+                terms: 0,
+                is_cancelled: payment.value.is_cancelled || false,
+                is_approved: payment.value.is_approved || false,
+                remarks: payment.value.remarks,
+                amount: formattedTotalAmount.value
+            }
+            // Update the amount in salesInvoiceData with the calculated total amount
+            salesInvoiceData.amount = formattedTotalAmount.value;
+            // Create new bill.
+            const response = await salesInvoiceService.createSalesInvoice(salesInvoiceData);
+            console.log("Hello", response);
+            salesInvoiceData.invoice_no = response.data.invoice_no;
+            console.log("The Data of Sales Invoice Number is: ", salesInvoiceData.invoice_no);
+            if (response && response.data.id) {
+                successAlert('Success', 'Sales Invoice has been added! The value of the ID is: ' + response.data.id);
+                successAlert('Success', 'Sales Invoice has been added! The value of the Document Reference Number is: ' + response.data.document_no);
+                // Save bill details
+                for (const detail of items.value) {
+                    const salesInvoiceDetailList = {
+                        bill_id: response.data.id, // Use the correct response ID
+                        sales_invoice_id: response.data.id,
+                        sales_invoice_ref_doc_no: response.data.document_no,
+                        product_id: detail.id, // Allow null
+                        barcode: detail.barcode,
+                        unit: detail.wholesale_unit,
+                        expiry_date: detail.expiry_date,
+                        quantity: detail.quantity, // Allow null
+                        price: detail.price, // Allow null
+                    };
+
+                    console.log('Saving bill detail:', salesInvoiceDetailList); // Log the detail being saved
+                    const result = await salesInvoiceDetailService.createSalesInvoiceDetail(salesInvoiceDetailList);
+
+                    if (result) {
+                        console.log('Bill detail saved successfully:', result);
+                    } else {
+                        console.error('Failed to save bill detail:', salesInvoiceDetailList);
+                    }
+                }
+                successAlert(t('alert.bill_created'), t('alert.success'));
+            } else {
+                errorAlert(t('Error'), t('Failed to create bill.'));
+            }
+
             if (items.value.length > 0) {
                 console.log('Payment before save:', items.value);
                 const itemData = {
                     prepared_by_id: user_id.value,
                     customer_id: payment.value.customer_id,
+                    approvedby: user_id.value,
+                    cancelled_by_id: payment.value.cancelled_by_id,
                     is_approved: payment.value.is_approved || false,
                     is_cancelled: payment.value.is_cancelled || false,
                     payment_date: formatDateTime(new Date()),
-                    cancelled_by_id: payment.value.cancelled_by_id,
-                    approvedby: user_id.value,
                     remarks: payment.value.remarks,
                 };
 
                 // Create new payment.
-                const response = await paymentService.createPayment(itemData);
-                if (response && response.data.id) {
+                const responsetwo = await paymentService.createPayment(itemData);
+                if (responsetwo && responsetwo.data.id) {
                     alert('Payment has been added! The value of the ID is: ' + response.data.id);
-                    console.log(response);
-                    console.log(response.data.or_number);
+                    console.log(responsetwo);
+                    console.log(responsetwo.data.or_number);
                     // Save payment details
-                    for (const item of items.value) {
-                        const paymentDetail = {
-                            or_number: response.data.or_number, // Use the correct response OR number
-                            payment_id: response.data.id, // Use the correct response ID
-                            product_id: item.id,
-                            quantity: item.quantity,
-                            payment_method_id: 2,
-                            bank_id: null,
-                            cheque_number: null,
-                            cheque_date: null,
-                            amount: formattedTotalAmount.value, // Assuming each item has a total
-                            sales_invoice_no: null,
+                    const paymentDetail = {
+                        payment_id: responsetwo.data.id,
+                        sales_invoice_id: responsetwo.data.id,
+                        sales_invoice_no: salesInvoiceData.invoice_no,
+                        amount: formattedTotalAmount.value, // Assuming each item has a total
 
-                        };
-                        OfficialReceiptNumber = response.data.or_number;
+                    };
+                    OfficialReceiptNumber = responsetwo.data.or_number;
 
-                        console.log('Saving payment detail:', paymentDetail); // Log the detail being saved
-                        const result = await paymentDetailService.createPaymentDetail(paymentDetail);
+                    console.log('Saving payment detail:', paymentDetail); // Log the detail being saved
+                    const result = await paymentDetailService.createPaymentDetail(paymentDetail);
 
-                        if (result) {
-                            console.log('Payment detail saved successfully:', result);
-                        } else {
-                            console.error('Failed to save payment detail:', paymentDetail);
-                        }
+                    if (result) {
+                        console.log('Payment detail saved successfully:', result);
+                    } else {
+                        console.error('Failed to save payment detail:', paymentDetail);
                     }
                     printItems();
                     successAlert(t('alert.payment_created'), t('alert.success'));
@@ -765,7 +826,7 @@ function printItems() {
         html += '</div>'; // Close receipt-total
 
         html += '<div style="text-align: center;">'; // Centering the Change text
-        html += `<h4>Change: ${calculateChange.value}</h4>`;
+        html += `<h4>Change: ${calculateChange.value.toFixed(2)}</h4>`;
         html += '</div>'; // Close the centered div
 
         // Add total number of items

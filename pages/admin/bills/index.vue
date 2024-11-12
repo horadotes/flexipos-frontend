@@ -221,6 +221,7 @@ import { productService } from '~/components/api/admin/ProductService.js';
 import { billDetailService } from '~/components/api/admin/BillDetailService.js';
 import FlatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/themes/dark.css';
+import { employeeService } from '~/components/api/admin/EmployeeService';
 
 const user_id = computed(() => localStorage.getItem('user_id'));
 const firstname = computed(() => localStorage.getItem('firstname'));
@@ -242,6 +243,15 @@ interface SortData {
 
 interface Bill {
     data: any[];
+}
+
+interface Employee {
+    id: number;
+    firstname: string;
+    lastname: string;
+    username: string;
+    role: string;
+    is_active: boolean;
 }
 
 interface BillDetail {
@@ -283,6 +293,7 @@ const state = reactive({
     error: null as Error | null,
     isTableLoading: false,
     sortData: { sortField: "", sortOrder: null } as SortData,
+    employees: [] as Employee[],
     bills: { data: [] } as Bill,
     suppliers: [] as Suppliers[],
     products: [] as Products[],
@@ -352,6 +363,21 @@ watch(
     }
 );
 
+async function fetchEmployees() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await employeeService.getEmployees();
+        state.employees = response.data; // Adjust if necessary based on API response structure
+        state.bills.data.forEach(bill => {
+            const selectedEmployee = state.employees.find(employee => employee.id === bill.prepared_by_id);
+            bill.prepared_by_id = selectedEmployee ? `${selectedEmployee.firstname} ${selectedEmployee.lastname}` : 'Unknown'; // Fallback if employee not found
+        });
+    } catch (error: any) {
+        state.error = error;
+    }
+    state.isTableLoading = false;
+}
 
 async function fetchSuppliers() {
     state.isTableLoading = true;
@@ -399,6 +425,7 @@ async function fetchBills() {
         const response = await billService.getBills();
         fetchSuppliers();
         fetchProducts();
+        fetchEmployees();
         console.log("Fetched bills:", response.data); // Log fetched bills
         state.bills = response;
     } catch (error: any) {

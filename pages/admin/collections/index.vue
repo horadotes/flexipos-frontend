@@ -1,12 +1,12 @@
 <template>
     <div>
         <NuxtLayout name="admin">
-            <main>
+            <main class="w-full mx-auto">
 
                 <Head>
                     <Title>Bills Payment - {{ runtimeConfig.public.appName }}</Title>
                 </Head>
-                <!-- Search and Add Collection Button Container -->
+                <!-- Search and Add Product Button Container -->
                 <div class="relative flex items-center space-x-4 mt-3">
                     <!-- Search Bar -->
                     <div class="relative flex flex-1">
@@ -21,83 +21,68 @@
                             class="block w-70 rounded-md border border-gray-400 shadow-sm focus:border-gray-500 focus:ring-gray-500 text-xs pl-8 pr-2 py-1.5" />
                     </div>
 
-                    <!-- Add Collection Button -->
+                    <!-- Add Product Button -->
                     <button @click="navigateToCreate" type="button"
                         class="rounded-md bg-gray-900 px-3 py-2 text-center text-xxs font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 flex items-center justify-center gap-2">
                         <PlusIcon class="h-3 w-3" aria-hidden="true" />
-                        New Collections
+                        New Payment
                     </button>
                 </div>
 
-                <!-- Collections List Table -->
+                <!-- Payments List Table -->
                 <div class="mt-4 overflow-x-auto">
-                    <table class="min-w-full bg-white rounded-lg shadow-md mt-2 rounded-b-lg">
-                        <thead>
-                            <tr class="text-left">
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900">collection_type</th>
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900">collection_date</th>
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900">customer</th>
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900">cash_voucher_no</th>
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900">is_cancelled</th>
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900">prepared_by_id</th>
-                                <th class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900 rounded-tr-lg">
-                                    actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-gray-100">
-                            <tr v-for="(collection, index) in paginatedCollections" :key="index"
-                                class="border-t bg-gray-50">
-                                <td class="px-4 py-2 text-xxs text-gray-700">{{ collection.collection_type }}</td>
-                                <td class="px-4 py-2 text-xxs text-gray-700">{{ collection.collection_date }}</td>
-                                <td class="px-4 py-2 text-xxs text-gray-700">{{ collection.customer }}</td>
-                                <td class="px-4 py-2 text-xxs text-gray-700">{{ collection.cash_voucher_no }}</td>
-                                <td class="px-4 py-2 text-xxs text-gray-700">{{ collection.is_cancelled }}</td>
-                                <td class="px-4 py-2 text-xxs text-gray-700">{{ collection.prepared_by_id }}</td>
-                                <td class="px-4 py-2 text-xxs text-gray-700">
-                                    <div class="flex space-x-2">
-                                        <button @click="editCollection(index)"
-                                            class="text-gray-600 hover:text-gray-900">
-                                            <!-- Edit Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                                fill="currentColor">
-                                                <path
-                                                    d="M17.414 2.586a2 2 0 00-2.828 0l-10 10V16a1 1 0 001 1h3.414l10-10a2 2 0 000-2.828l-1.586-1.586zM5 13l-1.5 1.5V13h1.5zm4.5-4.5L14 4l2 2-4.5 4.5H9.5V8.5z" />
-                                            </svg>
-                                        </button>
-                                        <button @click="deleteCollection(index)"
-                                            class="text-red-600 hover:text-red-900">
-                                            <!-- Delete Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                                fill="currentColor">
-                                                <path fill-rule="evenodd"
-                                                    d="M6 2a2 2 0 00-2 2v1H2v2h1v9a2 2 0 002 2h8a2 2 0 002-2V7h1V5h-2V4a2 2 0 00-2-2H6zm4 12a1 1 0 102 0V8a1 1 0 10-2 0v6zm-3-1a1 1 0 002 0V8a1 1 0 10-2 0v5zm8-1a1 1 0 10-2 0V8a1 1 0 102 0v5z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="collections.length === 0">
-                                <td colspan="7" class="px-4 py-2 text-xxs text-gray-500 text-center bg-gray-100">No
-                                    collections available.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Pagination Controls -->
-                    <div class="flex justify-between items-center mt-4">
-                        <span class="text-xxs text-gray-700 ml-1">Page {{ currentPage }} of {{ totalPages }}</span>
-                        <div class="flex space-x-2">
-                            <button @click="previousPage" :disabled="currentPage === 1"
-                                class="px-4 py-2 text-xxs font-semibold text-gray-900 bg-gray-200 rounded-md hover:bg-gray-300 disabled:bg-gray-100">
-                                Previous
-                            </button>
-                            <button @click="nextPage" :disabled="currentPage === totalPages"
-                                class="px-4 py-2 text-xxs font-semibold text-white bg-gray-900 rounded-md hover:bg-gray-800 disabled:bg-gray-700">
-                                Next
-                            </button>
-                        </div>
+                    <!-- Product Table -->
+                    <Alert type="danger" :text="state.error?.message" v-if="state.error" />
+                    <div class="table-responsive">
+                        <Table :columnHeaders="state.unpaidBillColumnHeader" :data="state.payments"
+                            :isLoading="state.isTableLoading" :sortData="state.sortData" @sort="sort">
+                            <template #body v-if="!state.isTableLoading && state.payments?.data.length">
+                                <tr v-for="(payment, index) in state.payments?.data" :key="index">
+                                    <td class="pl-3">
+                                        {{ payment.prepared_by_id }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.customer_id }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.approvedby }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.cancelled_by_id }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.or_number }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.is_approved }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.is_cancelled }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.payment_date }}
+                                    </td>
+                                    <td class="pl-3">
+                                        {{ payment.remarks }}
+                                    </td>
+                                    <td class="pl-3">
+                                        <div class="flex space-x-2">
+                                            <button @click="" class="text-gray-600 hover:text-gray-900">
+                                                View
+                                            </button>
+                                            <button @click="" class="text-gray-600 hover:text-gray-900">
+                                                Edit
+                                            </button>
+                                            <button @click="" class="text-red-600 hover:text-red-900">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </Table>
                     </div>
+                    <!-- <Pagination :data="state.categories" @previous="previous" @next="next" /> -->
                 </div>
             </main>
         </NuxtLayout>
@@ -107,99 +92,96 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
+import { employeeService } from '~/components/api/admin/EmployeeService';
+import { paymentService } from '~/components/api/admin/PaymentService';
 
 const runtimeConfig = useRuntimeConfig();
-const showForm = ref(false);
-const collection = ref({
-    collection_type: '',
-    collection_date: '',
-    customer: '',
-    cash_voucher_no: '',
-    is_cancelled: 'No',
-    prepared_by_id: ''
+
+interface Payment {
+    data: any[];
+}
+
+const currentTablePage = 1;
+
+interface SortData {
+    sortField: string;
+    sortOrder: "ascend" | "descend" | null;
+}
+
+function sort(sortingData: { column: string; sort: string }) {
+    if (sortingData.sort === 'ascend' || sortingData.sort === 'descend') {
+        state.sortData = {
+            sortField: sortingData.column,
+            sortOrder: sortingData.sort,
+        };
+    } else {
+        console.error('Invalid sort order:', sortingData.sort);
+        state.sortData = {
+            sortField: sortingData.column,
+            sortOrder: 'ascend',
+        };
+    }
+}
+
+const state = reactive({
+    unpaidBillColumnHeader: [
+        { name: "Prepared By", sorter: true, key: "preparedby" },
+        { name: "Customer Name", sorter: true, key: "customer_id" },
+        { name: "Approved By", sorter: true, key: "approvedby" },
+        { name: "Cancelled By", sorter: true, key: "cancelled_by_id" },
+        { name: "O.R Number", sorter: true, key: "or_number" },
+        { name: "is Approved", sorter: true, key: "is_approved" },
+        { name: "is Cancelled", sorter: true, key: "is_cancelled" },
+        { name: "Payment Date", sorter: true, key: "payment_date" },
+        { name: "Remarks", sorter: true, key: "remarks" },
+        { name: "Actions", sorter: true, key: "actions" },
+    ],
+    isTableLoading: false,
+    error: null as Error | null,
+    payments: { data: [] } as Payment,
+    sortData: { sortField: 'id', sortOrder: 'ascend' } as SortData,
+    employees: [],
 });
-const collections = ref<Array<{
-    collection_type: string,
-    collection_date: string,
-    customer: string,
-    cash_voucher_no: string,
-    is_cancelled: string,
-    prepared_by_id: string
-}>>([]);
-const currentPage = ref(1);
-const itemsPerPage = 10;
-let editingIndex = ref<number | null>(null);
 
-const totalPages = computed(() => Math.ceil(collections.value.length / itemsPerPage));
-
-const paginatedCollections = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return collections.value.slice(start, end);
-});
-
-function toggleForm() {
-    showForm.value = !showForm.value;
-    if (!showForm.value) {
-        editingIndex.value = null;
-        resetCollectionForm();
+// Function to fetch employees
+async function fetchEmployees() {
+    try {
+        const response = await employeeService.getEmployees();
+        state.employees = response.data; // Assuming the response structure contains the employee data
+    } catch (error) {
+        console.error('Failed to fetch employees:', error);
     }
 }
 
-function resetCollectionForm() {
-    collection.value = {
-        collection_type: '',
-        collection_date: '',
-        customer: '',
-        cash_voucher_no: '',
-        is_cancelled: 'No',
-        prepared_by_id: ''
-    };
-}
+// Update fetchBillsPayment to replace IDs with employee names
+async function fetchPayments() {
+    state.error = null;
+    state.isTableLoading = true;
+    await fetchEmployees();
+    try {
+        const response = await paymentService.getPayments();
+        state.payments = response;
 
-function submitCollection() {
-    if (isCollectionFormValid()) {
-        if (editingIndex.value !== null) {
-            // Update the existing collection.
-            collections.value[editingIndex.value] = { ...collection.value };
-            editingIndex.value = null;
-        } else {
-            // Add a new collection.
-            collections.value.push({ ...collection.value });
-        }
-        resetCollectionForm();
-        showForm.value = false;
+        state.payments.data.forEach(payment => {
+            const preparedBy = state.employees.find(emp => (emp as any).id === payment.prepared_by_id);
+            const approvedBy = state.employees.find(emp => (emp as any).id === payment.approved_by_id);
+            const cancelledBy = state.employees.find(emp => (emp as any).id === payment.cancelled_by_id);
+
+            payment.prepared_by_id = preparedBy ? `${(preparedBy as any).firstname} ${(preparedBy as any).lastname}` : '';
+            payment.approved_by_id = approvedBy ? `${(approvedBy as any).firstname} ${(approvedBy as any).lastname}` : '';
+            payment.cancelled_by_id = cancelledBy ? `${(cancelledBy as any).firstname} ${(cancelledBy as any).lastname}` : '';
+        });
+    } catch (error: any) {
+        state.error = error;
     }
-}
-
-function isCollectionFormValid() {
-    return collection.value.collection_type.trim() !== '' &&
-        collection.value.customer.trim() !== '';
-}
-
-function editCollection(index: number) {
-    collection.value = { ...collections.value[index] };
-    editingIndex.value = index;
-    showForm.value = true; // Open the form for editing.
-}
-
-function deleteCollection(index: number) {
-    collections.value.splice(index, 1);
-}
-
-function previousPage() {
-    if (currentPage.value > 1) {
-        currentPage.value--;
-    }
-}
-
-function nextPage() {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value++;
-    }
+    state.isTableLoading = false;
 }
 
 function navigateToCreate() {
     navigateTo("collections/create")
 }
+
+onMounted(() => {
+    fetchPayments();
+});
 </script>

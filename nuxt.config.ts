@@ -8,6 +8,8 @@ export default defineNuxtConfig({
     css: ["~/assets/css/main.css"],
     plugins: [
         '@/plugins/vue-notification.ts',
+        '@/plugins/vue3-apexcharts.js',
+        { src: '~/plugins/vue3-apexcharts.js', mode: 'client' },
     ],
     postcss: {
         plugins:
@@ -33,4 +35,18 @@ export default defineNuxtConfig({
     },
 
     compatibilityDate: "2024-07-10",
+
+    app: {
+        head: {
+            title: 'FlexiPOS',
+            meta: [
+                { charset: 'utf-8' },
+                { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+                { hid: 'description', name: 'description', content: '' }
+            ],
+            link: [
+                { rel: 'icon', type: 'image/x-icon', href: '/test.png' }
+            ]
+        }
+    }
 });
