@@ -246,7 +246,7 @@
                         </div>
                         <div v-if="isPaymentAmountValid" class="flex space-x-4 mt-8">
                             <div class="w-full">
-                                <FormButton class="w-full" button-style="success" @click="savePayment">Make
+                                <FormButton class="w-full" button-style="success" @click="makePayment">Make
                                     Payment
                                 </FormButton>
                             </div>
@@ -642,6 +642,7 @@ function addInvoicePaymentDetail() {
 
 async function makePayment() {
     try {
+        // Prepare the master invoice object
         const masterInvoice = {
             prepared_by_id: user_id.value,
             customer_id: state.selectedCustomerId,
@@ -660,62 +661,57 @@ async function makePayment() {
         if (response && response.data.id) {
             console.log(response);
 
-            // Save payment details
+            // Loop through selected invoices and create payment invoice details
             for (const detail of state.selectedInvoices.data) {
-                const paymentDetail = {
+                const paymentInvoiceDetail = {
                     payment_id: response.data.id,
-                    product_id: salesInvoiceDetail.product_id,
-                    quantity: salesInvoiceDetail.quantity,
-                    date: detail.date,
-                    payment_method_id: payment.payment_type,
-                    bank_id: '',
-                    cheque_number: '',
-                    cheque_date: '',
-                    amount: detail.amount_to_pay,
                     sales_invoice_no: detail.invoice_no,
+                    payment_method_id: payment.payment_type,
+                    amount: Number(detail.amount_to_pay),
                 };
 
-                console.log('Saving payment detail:', paymentDetail);
-                const result = await paymentDetailService.createPaymentDetail(paymentDetail);
+                console.log('Saving payment invoice detail:', paymentInvoiceDetail);
+                const result = await paymentDetailService.createPaymentDetail(paymentInvoiceDetail);
 
                 if (result) {
                     console.log('Payment detail saved successfully:', result);
                 } else {
-                    console.error('Failed to save payment detail:', paymentDetail);
+                    console.error('Failed to save payment detail:', paymentInvoiceDetail);
                 }
             }
+
+            console.log(payment.payment_type);
+
+            if (payment.payment_type === 'cheque') {
+                console.log('inserting cheque details to db');
+                for (const cheque of state.cheques.data) {
+                    const chequeData = {
+                        payment_id: response.data.id,
+                        cheque_voucher_number: cheque.voucher_number,
+                        payee: cheque.payee,
+                        bank: cheque.bank,
+                        cheque_number: cheque.cheque_number,
+                        cheque_date: cheque.cheque_date,
+                        amount: Number(cheque.amount),
+                    };
+                    console.log('Cheque Data:', chequeData);
+                    const chequeResult = await paymentChequeService.createPaymentCheque(chequeData);
+                    if (chequeResult) {
+                        console.log('Cheque saved successfully:', chequeResult);
+                    } else {
+                        console.error('Failed to save cheque:', chequeData);
+                    }
+                }
+            } else {
+                console.log('cash payment no need to save cheque details.');
+            }
+
             successAlert(t('alert.payment_created'), t('alert.success'));
+            navigateTo('/admin/collections');
         } else {
             errorAlert(t('Error'), t('Failed to create payment.'));
         }
-        console.log(payment.payment_type);
-
-        if (payment.payment_type === 'cheque') {
-            console.log('inserting cheque details to db');
-            for (const cheque of state.cheques.data) {
-                const chequeData = {
-                    payment_id: response.data.id,
-                    check_voucher_no: cheque.voucher_number,
-                    payee: cheque.payee,
-                    bank_id: cheque.bank,
-                    cheque_number: cheque.cheque_number,
-                    cheque_date: cheque.cheque_date,
-                    amount: cheque.amount,
-                };
-                console.log('Cheque Data:', chequeData);
-                const chequeResult = await paymentChequeService.createPaymentCheque(chequeData);
-                if (chequeResult) {
-                    console.log('Cheque saved successfully:', chequeResult);
-                } else {
-                    console.error('Failed to save cheque:', chequeData);
-                }
-            }
-        } else {
-            console.log('cash payment no need to save cheque details.');
-        }
-        navigateTo('/admin/payments');
-    }
-    catch (error: any) {
+    } catch (error: any) {
         console.error('Error saving payment:', error.message);
         errorAlert(t('Error'), t('An error occurred while saving the payment.'));
     }
@@ -777,15 +773,12 @@ async function savePayment() {
                         for (const salesInvoiceDetail of salesInvoice) {
                             const paymentInvoiceDetail = {
                                 payment_id: response.data.id,
-                                product_id: salesInvoiceDetail.product_id,
-                                quantity: salesInvoiceDetail.quantity,
-                                date: detail.date,
+                                sales_invoice_no: detail.invoice_no,
                                 payment_method_id: payment.payment_type,
                                 bank_id: '',
                                 cheque_number: '',
                                 cheque_date: '',
                                 amount: detail.amount_to_pay,
-                                sales_invoice_no: detail.invoice_no,
                             };
                             console.log('Payment invoice detail:', paymentInvoiceDetail);
                             // Send paymentInvoiceDetail to backend
@@ -808,7 +801,6 @@ async function savePayment() {
         errorAlert('Error', 'An error occurred while saving the invoice.');
     }
 }
-
 
 const paymentInvoice = {
     payment_id: '',
