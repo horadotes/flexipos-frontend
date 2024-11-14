@@ -271,15 +271,15 @@ const navigation = [
             { name: "Sales Invoice", href: "/admin/sales_invoice", icon: DocumentTextIcon, current: false },
             { name: "Collections", href: "/admin/collections", icon: DocumentDuplicateIcon, current: false },
             { name: "Credit Memo", href: "/admin/creditmemo", icon: UserCircleIcon, current: false },
-            { name: "Damages / Spoilage", href: "/admin/payments", icon: CreditCardIcon, current: false },
+            { name: "Damages / Spoilage", href: "/admin/damages", icon: CreditCardIcon, current: false },
         ],
     },
     { name: "Roles / Permissions", href: "/roles", icon: LockClosedIcon, current: false },
     {
         name: "Returns", href: "/roles", icon: LockClosedIcon, current: false,
         children: [
-            { name: "Customer Returns", href: "/bills", icon: ArrowLongLeftIcon, current: false },
-            { name: "Supplier Returns", href: "/payments", icon: ArrowLongLeftIcon, current: false },
+            { name: "Customer Returns", href: "/admin/customer_returns", icon: ArrowLongLeftIcon, current: false },
+            { name: "Supplier Returns", href: "/admin/supplier_returns", icon: ArrowLongLeftIcon, current: false },
         ],
     },
     { name: "Reports", href: "/roles", icon: ChartBarSquareIcon, current: false },
@@ -287,7 +287,7 @@ const navigation = [
 
 const userNavigation = [
     { name: 'Your profile', href: '#' },
-    { name: 'Sign out', href: '../' },
+    { name: 'Sign out', href: '../../' },
 ];
 
 const state = reactive({
@@ -325,19 +325,4 @@ function navigateTo(href) {
     window.location.href = href;
     closePeopleDropdown();
 }
-
-// function handleNavigation(item) {
-//     if (item.children) {
-//         item.current = !item.current;
-//     } else {
-//         setCurrent(item.name);
-//         window.location.href = item.href;
-//     }
-// }
-
-// function setCurrent(name) {
-//     navigation.forEach(item => {
-//         item.current = item.name === name;
-//     });
-// }
 </script>

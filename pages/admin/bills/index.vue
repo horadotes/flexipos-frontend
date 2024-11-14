@@ -80,7 +80,7 @@
                                 <div class="flex-1 min-w-[120px] max-w-[200px]">
                                     <label for="expiry_date" class="text-xxs font-medium text-gray-700">Expiry
                                         Date</label>
-                                    <input id="expiry_date" v-model="billDetail.expiry_date" type="text"
+                                    <input id="expiry_date" v-model="billDetail.expiry_date" type="date"
                                         class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-gray-500 focus:ring-gray-500 text-xxs px-2 py-1" />
                                 </div>
                             </div>
@@ -214,7 +214,6 @@ import { helpers, required } from '@vuelidate/validators';
 import { ref, reactive, onMounted, computed } from 'vue';
 import { billService } from '~/components/api/admin/BillService.js';
 import { useAlert } from '@/composables/alert';
-import { useI18n } from 'vue-i18n';
 import type { Error } from '@/types/error';
 import { supplierService } from '~/components/api/admin/SupplierService.js';
 import { productService } from '~/components/api/admin/ProductService.js';
@@ -230,6 +229,7 @@ const dateConfig = ref<{ dateFormat: string }>({ dateFormat: "m/d/Y" });
 
 const currentTablePage = ref(1);
 
+import { useI18n } from 'vue-i18n';
 // Alert and i18n setup
 const { successAlert, errorAlert, warningAlert } = useAlert();
 const { t } = useI18n();

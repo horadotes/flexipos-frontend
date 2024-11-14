@@ -64,6 +64,13 @@
                     </div>
                 </div>
             </ul>
+            <!-- Be sure to use this with a layout container that is full-width on mobile -->
+            <div class="overflow-hidden bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <!-- Content goes here -->
+                    <FormLineChart type="bar" :options="barChartHorizontal" :series="lineChartSeries" />
+                </div>
+            </div>
         </main>
     </NuxtLayout>
 </template>
@@ -75,6 +82,22 @@ const runtimeConfig = useRuntimeConfig();
 const lineChartOptions = {
     chart: {
         id: 'vuechart-example'
+    },
+    xaxis: {
+        categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997]
+    }
+};
+
+const barChartHorizontal = {
+    chart: {
+        id: 'vuechart-example'
+    },
+    plotOptions: {
+        bar: {
+            borderRadius: 4,
+            borderRadiusApplication: 'end',
+            horizontal: true,
+        }
     },
     xaxis: {
         categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997]

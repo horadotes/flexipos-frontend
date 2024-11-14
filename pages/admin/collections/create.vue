@@ -667,7 +667,7 @@ async function makePayment() {
                     payment_id: response.data.id,
                     sales_invoice_no: detail.invoice_no,
                     payment_method_id: payment.payment_type,
-                    amount: Number(detail.amount_to_pay),
+                    amount: payment.cash,
                 };
 
                 console.log('Saving payment invoice detail:', paymentInvoiceDetail);
