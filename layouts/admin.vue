@@ -267,7 +267,7 @@ const navigation = [
         current: false,
         children: [
             { name: "Bills", href: "/admin/bills", icon: CurrencyDollarIcon, current: false },
-            { name: "Bills Payment", href: "/admin/payments", icon: CreditCardIcon, current: false },
+            { name: "Bills Payment", href: "/admin/bills_payment", icon: CreditCardIcon, current: false },
             { name: "Sales Invoice", href: "/admin/sales_invoice", icon: DocumentTextIcon, current: false },
             { name: "Collections", href: "/admin/collections", icon: DocumentDuplicateIcon, current: false },
             { name: "Credit Memo", href: "/admin/creditmemo", icon: UserCircleIcon, current: false },

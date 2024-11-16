@@ -181,7 +181,7 @@ async function fetchBillsPayment() {
 // }
 
 function navigateToCreate() {
-    navigateTo("payments/create")
+    navigateTo("bills_payment/create")
 }
 
 onMounted(() => {

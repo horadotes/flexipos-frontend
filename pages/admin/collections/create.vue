@@ -665,9 +665,10 @@ async function makePayment() {
             for (const detail of state.selectedInvoices.data) {
                 const paymentInvoiceDetail = {
                     payment_id: response.data.id,
+                    sales_invoice_id: detail.id,
                     sales_invoice_no: detail.invoice_no,
                     payment_method_id: payment.payment_type,
-                    amount: payment.cash,
+                    amount: detail.amount_to_pay,
                 };
 
                 console.log('Saving payment invoice detail:', paymentInvoiceDetail);
@@ -850,9 +851,6 @@ watch(
 // onMounted Hook to fetch initial data
 onMounted(async () => {
     fetchCustomers();
-    fetchInvoices();
     fetchSalesInvoiceDetail();
-
-    console.log(state.unpaidInvoices);
 });
 </script>
