@@ -146,7 +146,8 @@
                             <div class="w-1/2">
                                 <label class="block text-xs font-medium text-gray-700">Price</label>
                                 <input v-model.number="salesInvoiceDetail.price" type="number" placeholder="price"
-                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3" />
+                                    class="block w-full bg-gray-100 mt-3 border-gray-300 rounded-md shadow-sm focus:border-gray-500 focus:ring-gray-500 text-sm p-3 cursor-default"
+                                    readonly />
                             </div>
                         </div>
 
@@ -282,6 +283,7 @@ interface Product {
     name: string;
     expiry_date: string;
     quantity_onhand: string;
+    current_price: number;
     is_active: boolean;
 }
 
@@ -468,7 +470,6 @@ async function saveSalesInvoice() {
 
                     if (result) {
                         console.log('Bill detail saved successfully:', result);
-                        resetAllFields();
                         redirectToSalesInvoice();
                     } else {
                         console.error('Failed to save bill detail:', salesInvoiceDetailList);
@@ -488,41 +489,6 @@ async function saveSalesInvoice() {
         console.error('Error saving bill:', error.message);
         errorAlert(t('Error'), t('An error occurred while saving the bill.'));
     }
-}
-
-function resetAllFields() {
-    // Reset all fields here
-    salesInvoice.value = {
-        id: '',
-        branch_id: '',
-        sales_order_id: '',
-        customer_id: '',
-        prepared_by_id: '',
-        sales_representative: '',
-        cancelled_by_id: '',
-        approved_by_id: '',
-        invoice_no: '',
-        document_no: '',
-        date: '',
-        due_date: '',
-        payment_type: 'Cash',
-        terms: '0',
-        is_cancelled: false,
-        is_approved: false,
-        remarks: '',
-        total: '',
-    };
-
-    salesInvoiceDetail.value = {
-        sales_invoice_id: '',
-        product_id: 0,
-        product_name: '',
-        barcode: '',
-        unit: '',
-        expiry_date: '',
-        quantity: 0,
-        price: 0,
-    };
 }
 
 function resetSalesDetails() {
@@ -592,6 +558,7 @@ watch(
             salesInvoiceDetail.value.barcode = selectedProduct.barcode;
             salesInvoiceDetail.value.unit = selectedProduct.wholesale_unit;
             salesInvoiceDetail.value.expiry_date = selectedProduct.expiry_date; // Update expiry_date if the selected product exists
+            salesInvoiceDetail.value.price = selectedProduct.current_price;
             stock = selectedProduct.quantity_onhand;
         } else {
             salesInvoiceDetail.value.product_name = ''; // Reset name if no product is selected

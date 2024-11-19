@@ -13,7 +13,8 @@
                     <div class="flex lg:flex-1">
                         <a href="#" class="-m-1.5 p-1.5">
                             <span class="sr-only">Your Company</span>
-                            <img class="h-10 w-auto ml-11" src="/public/images/Logo.png" alt="" />
+                            <!-- <img class="h-10 w-auto ml-11" src="/public/images/Logo.png" alt="" /> -->
+                            <h1 class="logo">FlexiPOS</h1>
                         </a>
                     </div>
                     <div class="flex lg:hidden">
@@ -487,7 +488,7 @@
                                 <li v-for="item in footerNavigation.solutions" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -497,7 +498,7 @@
                                 <li v-for="item in footerNavigation.support" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -509,7 +510,7 @@
                                 <li v-for="item in footerNavigation.company" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -519,7 +520,7 @@
                                 <li v-for="item in footerNavigation.legal" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                        }}</a>
+                                    }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -771,3 +772,16 @@ const frequency = ref(pricing.frequencies[0])
 
 //contact area functions
 </script>
+
+<style scoped>
+.logo {
+    font-family: Arial, sans-serif;
+    font-size: 28px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #0e2545, #1d4d91, #89b6f5);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+</style>

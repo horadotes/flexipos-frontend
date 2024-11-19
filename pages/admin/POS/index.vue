@@ -687,7 +687,7 @@ async function savePayment() {
                 const itemData = {
                     prepared_by_id: user_id.value,
                     customer_id: payment.value.customer_id,
-                    approvedby: user_id.value,
+                    approved_by_id: user_id.value,
                     cancelled_by_id: payment.value.cancelled_by_id,
                     is_approved: payment.value.is_approved || false,
                     is_cancelled: payment.value.is_cancelled || false,

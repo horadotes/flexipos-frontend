@@ -425,10 +425,6 @@ interface Supplier {
     is_active: boolean;
 }
 
-interface amountToPay {
-    amount: string;
-}
-
 const supplier = reactive({
     id: '',
     name: '',
@@ -479,8 +475,6 @@ interface PaySelectedBillDetail {
     amount_to_pay: string;
 }
 
-const paySelectedBills = reactive<PaySelectedBillDetail[]>([]);
-
 const makepayment = reactive({
     supplier_id: user_id.value,
     prepared_by_id: user_id.value,
@@ -491,14 +485,6 @@ const makepayment = reactive({
     date: payment.date,
     is_cancelled: payment.is_cancelled,
 });
-
-interface selectedBillInput {
-    bill_id: string;
-    purchase_order_no: string;
-    bill_date: string;
-    amount: string;
-    amount_to_pay: string;
-}
 
 const selectedbillinput = reactive({
     bill_id: '',
@@ -694,7 +680,7 @@ async function makePayment() {
         } else {
             console.log('cash payment no need to save cheque details.');
         }
-        navigateTo('/admin/payments');
+        navigateTo('/admin/bills_payment');
     }
     catch (error: any) {
         console.error('Error saving bill:', error.message);

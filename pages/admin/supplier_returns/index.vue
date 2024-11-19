@@ -31,7 +31,7 @@
                 <!-- Supplier Return Form -->
                 <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
                     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-6xl">
-                        <form @submit.prevent="saveSupplierReturn()">
+                        <form @submit.prevent="saveSupplierReturns()">
                             <FormLabel label="Supplier Return" class="text-xl" />
                             <Alert type="danger" :text="state?.error?.message" v-if="
                                 state.error?.message &&
@@ -350,18 +350,6 @@ function previous() {
     }
 }
 
-const activeInactiveOptions = [
-    { value: true, label: 'Yes' },
-    { value: false, label: 'No' },
-];
-
-const selectedIsActive = computed({
-    get: () => masterSupplierReturn.is_cancelled,
-    set: (newValue: boolean) => {
-        masterSupplierReturn.is_cancelled = newValue;
-    }
-});
-
 const returnToEdit = ref<number | null>(null);
 
 
@@ -529,6 +517,27 @@ async function fetchSupplierReturns() {
     }
 }
 
+async function saveSupplierReturns() {
+    try {
+        const SupplierReturnData = {
+            bill_id: masterSupplierReturn.bill_id,
+            prepared_by_id: user_id,
+            approved_by_id: masterSupplierReturn.approved_by_id,
+            cancelled_by_id: masterSupplierReturn.cancelled_by_id,
+            branch_no: masterSupplierReturn.branch_no,
+            return_date: masterSupplierReturn.return_date,
+            remarks: masterSupplierReturn.remarks,
+            is_cancelled: masterSupplierReturn.is_cancelled,
+        };
+
+        const response = await supplierReturnService.createSupplierReturn(SupplierReturnData);
+        console.log(response);
+    }
+    catch (error) {
+        console.error('Failed to save Supplier Return:', error);
+    }
+}
+
 async function saveSupplierReturn() {
     try {
         if (supplierReturnDetailList.value.length > 0) {
@@ -551,41 +560,41 @@ async function saveSupplierReturn() {
             const response = await supplierReturnService.createSupplierReturn(supplierReturnData);
             console.log('Response from createSupplierReturn:', response);
 
-            // Check if the response is valid and has the expected structure
-            if (response && response.data) {
-                console.log('Supplier Return created successfully:', response.data);
+            // // Check if the response is valid and has the expected structure
+            // if (response && response.data) {
+            //     console.log('Supplier Return created successfully:', response.data);
 
-                // Save each bill detail
-                for (const detail of supplierReturnDetailList.value) {
-                    const supplierReturnDetailData = {
-                        product_id: detail.product_id,
-                        supplier_return_id: response.data.id,
-                        unit: detail.unit,
-                        expiry_date: detail.expiry_date,
-                        quantity: detail.quantity,
-                        price: detail.price,
-                    };
+            //     // Save each bill detail
+            //     for (const detail of supplierReturnDetailList.value) {
+            //         const supplierReturnDetailData = {
+            //             product_id: detail.product_id,
+            //             supplier_return_id: response.data.id,
+            //             unit: detail.unit,
+            //             expiry_date: detail.expiry_date,
+            //             quantity: detail.quantity,
+            //             price: detail.price,
+            //         };
 
-                    console.log('Saving bill detail:', supplierReturnDetailData);
+            //         console.log('Saving bill detail:', supplierReturnDetailData);
 
-                    // Attempt to create the supplier return detail
-                    const result = await supplierReturnDetailService.createSupplierReturnDetail(supplierReturnDetailData);
-                    console.log('Response from createSupplierReturnDetail:', result);
+            //         // Attempt to create the supplier return detail
+            //         const result = await supplierReturnDetailService.createSupplierReturnDetail(supplierReturnDetailData);
+            //         console.log('Response from createSupplierReturnDetail:', result);
 
-                    // Check if the detail save was successful
-                    if (result) {
-                        console.log('Bill detail saved successfully:', result);
-                    } else {
-                        console.error('Failed to save bill detail:', supplierReturnDetailData);
-                    }
-                }
+            //         // Check if the detail save was successful
+            //         if (result) {
+            //             console.log('Bill detail saved successfully:', result);
+            //         } else {
+            //             console.error('Failed to save bill detail:', supplierReturnDetailData);
+            //         }
+            //     }
 
-                // Show success alert
-                successAlert(t('alert.bill_created'), t('alert.success'));
-            } else {
-                console.error('Failed to create supplier return:', response);
-                errorAlert(t('Error'), t('Failed to create bill.'));
-            }
+            //     // Show success alert
+            //     successAlert(t('alert.bill_created'), t('alert.success'));
+            // } else {
+            //     console.error('Failed to create supplier return:', response);
+            //     errorAlert(t('Error'), t('Failed to create bill.'));
+            // }
 
             // Refresh the bill list
             fetchSupplierReturns();

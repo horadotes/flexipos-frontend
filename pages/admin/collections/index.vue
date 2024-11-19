@@ -45,7 +45,7 @@
                                         {{ payment.customer_id }}
                                     </td>
                                     <td class="pl-3">
-                                        {{ payment.approvedby }}
+                                        {{ payment.approved_by_id }}
                                     </td>
                                     <td class="pl-3">
                                         {{ payment.cancelled_by_id }}
@@ -54,10 +54,16 @@
                                         {{ payment.or_number }}
                                     </td>
                                     <td class="pl-3">
-                                        {{ payment.is_approved }}
+                                        <span class="pl-3"
+                                            :class="payment.is_approved ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
+                                            {{ payment.is_approved ? 'Approved' : 'Pending' }}
+                                        </span>
                                     </td>
                                     <td class="pl-3">
-                                        {{ payment.is_cancelled }}
+                                        <span class="pl-3"
+                                            :class="payment.is_cancelled ? 'inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-500 ring-1 ring-inset ring-orange-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
+                                            {{ payment.is_cancelled ? 'Cancelled' : 'Pending' }}
+                                        </span>
                                     </td>
                                     <td class="pl-3">
                                         {{ payment.payment_date }}
@@ -94,6 +100,7 @@ import { ref, computed } from 'vue';
 import { PlusIcon } from '@heroicons/vue/24/outline';
 import { employeeService } from '~/components/api/admin/EmployeeService';
 import { paymentService } from '~/components/api/admin/PaymentService';
+import { customerService } from '~/components/api/admin/CustomerService';
 
 const runtimeConfig = useRuntimeConfig();
 
@@ -141,6 +148,7 @@ const state = reactive({
     payments: { data: [] } as Payment,
     sortData: { sortField: 'id', sortOrder: 'ascend' } as SortData,
     employees: [],
+    customers: [],
 });
 
 // Function to fetch employees
@@ -153,11 +161,21 @@ async function fetchEmployees() {
     }
 }
 
+async function fetchCustomers() {
+    try {
+        const response = await customerService.getCustomers();
+        state.customers = response.data; // Assuming the response structure contains the employee data
+    } catch (error) {
+        console.error('Failed to fetch customers:', error);
+    }
+}
+
 // Update fetchBillsPayment to replace IDs with employee names
 async function fetchPayments() {
     state.error = null;
     state.isTableLoading = true;
     await fetchEmployees();
+    await fetchCustomers();
     try {
         const response = await paymentService.getPayments();
         state.payments = response;
@@ -166,10 +184,12 @@ async function fetchPayments() {
             const preparedBy = state.employees.find(emp => (emp as any).id === payment.prepared_by_id);
             const approvedBy = state.employees.find(emp => (emp as any).id === payment.approved_by_id);
             const cancelledBy = state.employees.find(emp => (emp as any).id === payment.cancelled_by_id);
+            const customer = state.customers.find(cust => (cust as any).id === payment.customer_id);
 
-            payment.prepared_by_id = preparedBy ? `${(preparedBy as any).firstname} ${(preparedBy as any).lastname}` : '';
-            payment.approved_by_id = approvedBy ? `${(approvedBy as any).firstname} ${(approvedBy as any).lastname}` : '';
-            payment.cancelled_by_id = cancelledBy ? `${(cancelledBy as any).firstname} ${(cancelledBy as any).lastname}` : '';
+            payment.prepared_by_id = preparedBy ? `${(preparedBy as any).firstname} ${(preparedBy as any).lastname}` : 'N/A';
+            payment.approved_by_id = approvedBy ? `${(approvedBy as any).firstname} ${(approvedBy as any).lastname}` : 'N/A';
+            payment.cancelled_by_id = cancelledBy ? `${(cancelledBy as any).firstname} ${(cancelledBy as any).lastname}` : 'N/A';
+            payment.customer_id = customer ? `${(customer as any).firstname} ${(customer as any).lastname}` : 'N/A';
         });
     } catch (error: any) {
         state.error = error;
