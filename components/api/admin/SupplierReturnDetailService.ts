@@ -1,4 +1,5 @@
-import BaseAPIService from "../BaseAPIService.js";
+import BaseAPIService from "../BaseAPIService";
+
 
 class SupplierReturnDetailService extends BaseAPIService {
     // Fetch all suppliers

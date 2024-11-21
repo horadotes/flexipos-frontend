@@ -333,10 +333,11 @@ import { salesInvoiceDetailService } from '~/components/api/admin/SalesInvoiceDe
 
 // Alert and i18n setup
 const { successAlert } = useAlert();
+const { warningAlert } = useAlert();
 const { errorAlert } = useAlert();
 const { t } = useI18n()
 
-// interface area
+// interface area   
 interface Item {
     id: number;
     barcode: string;
@@ -614,139 +615,143 @@ function addItem() {
 let OfficialReceiptNumber = '';
 
 async function savePayment() {
-    if (Number(payment.value.cash_tendered) >= totalAmount.value) {
-        try {
-            const formatDateTime = (date: Date) => {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-                const day = String(date.getDate()).padStart(2, '0');
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-            };
-
-            const salesInvoiceData = {
-                branch_id: '',
-                sales_order_id: '',
-                customer_id: payment.value.customer_id,
-                prepared_by_id: user_id.value,
-                sales_representative: user_id.value,
-                cancelled_by_id: '',
-                approved_by_id: payment.value.is_approved || false,
-                invoice_no: '',
-                date: formatDateTime(new Date()),
-                due_date: formatDateTime(new Date()),
-                payment_type: 'cash',
-                terms: 0,
-                is_cancelled: payment.value.is_cancelled || false,
-                is_approved: payment.value.is_approved || false,
-                remarks: payment.value.remarks,
-                amount: formattedTotalAmount.value
-            }
-            // Update the amount in salesInvoiceData with the calculated total amount
-            salesInvoiceData.amount = formattedTotalAmount.value;
-            // Create new bill.
-            const response = await salesInvoiceService.createSalesInvoice(salesInvoiceData);
-            console.log("Hello", response);
-            salesInvoiceData.invoice_no = response.data.invoice_no;
-            console.log("The Data of Sales Invoice Number is: ", salesInvoiceData.invoice_no);
-            if (response && response.data.id) {
-                successAlert('Success', 'Sales Invoice has been added! The value of the ID is: ' + response.data.id);
-                successAlert('Success', 'Sales Invoice has been added! The value of the Document Reference Number is: ' + response.data.document_no);
-                // Save bill details
-                for (const detail of items.value) {
-                    const salesInvoiceDetailList = {
-                        bill_id: response.data.id, // Use the correct response ID
-                        sales_invoice_id: response.data.id,
-                        sales_invoice_ref_doc_no: response.data.document_no,
-                        product_id: detail.id, // Allow null
-                        barcode: detail.barcode,
-                        unit: detail.wholesale_unit,
-                        expiry_date: detail.expiry_date,
-                        quantity: detail.quantity, // Allow null
-                        price: detail.price, // Allow null
-                    };
-
-                    console.log('Saving bill detail:', salesInvoiceDetailList); // Log the detail being saved
-                    const result = await salesInvoiceDetailService.createSalesInvoiceDetail(salesInvoiceDetailList);
-
-                    if (result) {
-                        console.log('Bill detail saved successfully:', result);
-                    } else {
-                        console.error('Failed to save bill detail:', salesInvoiceDetailList);
-                    }
-                }
-                successAlert(t('alert.bill_created'), t('alert.success'));
-            } else {
-                errorAlert(t('Error'), t('Failed to create bill.'));
-            }
-
-            if (items.value.length > 0) {
-                console.log('Payment before save:', items.value);
-                const itemData = {
-                    prepared_by_id: user_id.value,
-                    customer_id: payment.value.customer_id,
-                    approved_by_id: user_id.value,
-                    cancelled_by_id: payment.value.cancelled_by_id,
-                    is_approved: payment.value.is_approved || false,
-                    is_cancelled: payment.value.is_cancelled || false,
-                    payment_date: formatDateTime(new Date()),
-                    remarks: payment.value.remarks,
+    if (items.value.length > 0) {
+        if (Number(payment.value.cash_tendered) >= totalAmount.value) {
+            try {
+                const formatDateTime = (date: Date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
                 };
 
-                // Create new payment.
-                const responsetwo = await paymentService.createPayment(itemData);
-                if (responsetwo && responsetwo.data.id) {
-                    alert('Payment has been added! The value of the ID is: ' + response.data.id);
-                    console.log(responsetwo);
-                    console.log(responsetwo.data.or_number);
-                    // Save payment details
-                    const paymentDetail = {
-                        payment_id: responsetwo.data.id,
-                        sales_invoice_id: responsetwo.data.id,
-                        sales_invoice_no: salesInvoiceData.invoice_no,
-                        amount: formattedTotalAmount.value, // Assuming each item has a total
-
-                    };
-                    OfficialReceiptNumber = responsetwo.data.or_number;
-
-                    console.log('Saving payment detail:', paymentDetail); // Log the detail being saved
-                    const result = await paymentDetailService.createPaymentDetail(paymentDetail);
-
-                    if (result) {
-                        console.log('Payment detail saved successfully:', result);
-                    } else {
-                        console.error('Failed to save payment detail:', paymentDetail);
-                    }
-                    printItems();
-                    successAlert(t('alert.payment_created'), t('alert.success'));
-                    // Reset the payment and item arrays
-                    payment.value = {
-                        customer_id: 1,
-                        cash_tendered: '',
-                        cancelled_by_id: null,
-                        is_approved: true,
-                        is_cancelled: false,
-                        remarks: 'POS payment',
-                    };
-                    items.value = [];
-                    barcodeInput.value = '';
-                    currentPage.value = 1;
-                    showCashForm.value = false;
-                } else {
-                    errorAlert(t('Error'), t('Failed to create payment.'));
+                const salesInvoiceData = {
+                    branch_id: '',
+                    sales_order_id: '',
+                    customer_id: payment.value.customer_id,
+                    prepared_by_id: user_id.value,
+                    sales_representative: user_id.value,
+                    cancelled_by_id: '',
+                    approved_by_id: payment.value.is_approved || false,
+                    invoice_no: '',
+                    date: formatDateTime(new Date()),
+                    due_date: formatDateTime(new Date()),
+                    payment_type: 'cash',
+                    terms: 0,
+                    is_cancelled: payment.value.is_cancelled || false,
+                    is_approved: payment.value.is_approved || false,
+                    remarks: payment.value.remarks,
+                    amount: formattedTotalAmount.value
                 }
-            } else {
-                errorAlert(t('Error'), t('Please add at least one payment detail.'));
+                // Update the amount in salesInvoiceData with the calculated total amount
+                salesInvoiceData.amount = formattedTotalAmount.value;
+                // Create new bill.
+                const response = await salesInvoiceService.createSalesInvoice(salesInvoiceData);
+                console.log("Hello", response);
+                salesInvoiceData.invoice_no = response.data.invoice_no;
+                console.log("The Data of Sales Invoice Number is: ", salesInvoiceData.invoice_no);
+                if (response && response.data.id) {
+                    successAlert('Success', 'Sales Invoice has been added! The value of the ID is: ' + response.data.id);
+                    successAlert('Success', 'Sales Invoice has been added! The value of the Document Reference Number is: ' + response.data.document_no);
+                    // Save bill details
+                    for (const detail of items.value) {
+                        const salesInvoiceDetailList = {
+                            bill_id: response.data.id, // Use the correct response ID
+                            sales_invoice_id: response.data.id,
+                            sales_invoice_ref_doc_no: response.data.document_no,
+                            product_id: detail.id, // Allow null
+                            barcode: detail.barcode,
+                            unit: detail.wholesale_unit,
+                            expiry_date: detail.expiry_date,
+                            quantity: detail.quantity, // Allow null
+                            price: detail.price, // Allow null
+                        };
+
+                        console.log('Saving bill detail:', salesInvoiceDetailList); // Log the detail being saved
+                        const result = await salesInvoiceDetailService.createSalesInvoiceDetail(salesInvoiceDetailList);
+
+                        if (result) {
+                            console.log('Bill detail saved successfully:', result);
+                        } else {
+                            console.error('Failed to save bill detail:', salesInvoiceDetailList);
+                        }
+                    }
+                    successAlert(t('alert.bill_created'), t('alert.success'));
+                } else {
+                    errorAlert(t('Error'), t('Failed to create bill.'));
+                }
+
+                if (items.value.length > 0) {
+                    console.log('Payment before save:', items.value);
+                    const itemData = {
+                        prepared_by_id: user_id.value,
+                        customer_id: payment.value.customer_id,
+                        approved_by_id: user_id.value,
+                        cancelled_by_id: payment.value.cancelled_by_id,
+                        is_approved: payment.value.is_approved || false,
+                        is_cancelled: payment.value.is_cancelled || false,
+                        payment_date: formatDateTime(new Date()),
+                        remarks: payment.value.remarks,
+                    };
+
+                    // Create new payment.
+                    const responsetwo = await paymentService.createPayment(itemData);
+                    if (responsetwo && responsetwo.data.id) {
+                        alert('Payment has been added! The value of the ID is: ' + response.data.id);
+                        console.log(responsetwo);
+                        console.log(responsetwo.data.or_number);
+                        // Save payment details
+                        const paymentDetail = {
+                            payment_id: responsetwo.data.id,
+                            sales_invoice_id: responsetwo.data.id,
+                            sales_invoice_no: salesInvoiceData.invoice_no,
+                            amount: formattedTotalAmount.value, // Assuming each item has a total
+
+                        };
+                        OfficialReceiptNumber = responsetwo.data.or_number;
+
+                        console.log('Saving payment detail:', paymentDetail); // Log the detail being saved
+                        const result = await paymentDetailService.createPaymentDetail(paymentDetail);
+
+                        if (result) {
+                            console.log('Payment detail saved successfully:', result);
+                        } else {
+                            console.error('Failed to save payment detail:', paymentDetail);
+                        }
+                        printItems();
+                        successAlert(t('alert.payment_created'), t('alert.success'));
+                        // Reset the payment and item arrays
+                        payment.value = {
+                            customer_id: 1,
+                            cash_tendered: '',
+                            cancelled_by_id: null,
+                            is_approved: true,
+                            is_cancelled: false,
+                            remarks: 'POS payment',
+                        };
+                        items.value = [];
+                        barcodeInput.value = '';
+                        currentPage.value = 1;
+                        showCashForm.value = false;
+                    } else {
+                        errorAlert(t('Error'), t('Failed to create payment.'));
+                    }
+                } else {
+                    errorAlert(t('Error'), t('Please add at least one payment detail.'));
+                }
+            } catch (error: any) {
+                console.error('Error saving payment:', error.message);
+                errorAlert(t('Error'), t('An error occurred while saving the payment.'));
             }
-        } catch (error: any) {
-            console.error('Error saving payment:', error.message);
-            errorAlert(t('Error'), t('An error occurred while saving the payment.'));
+        } else {
+            alert('Payment amount should be equal to or greater than total amount.');
+            console.log(payment.value.cash_tendered);
         }
     } else {
-        alert('Payment amount should be equal to or greater than total amount.');
-        console.log(payment.value.cash_tendered);
+        warningAlert('Warning', 'Please add atleast one item in the list.');
     }
 }
 

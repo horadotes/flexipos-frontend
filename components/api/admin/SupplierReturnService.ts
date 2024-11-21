@@ -12,7 +12,7 @@ class SupplierReturnService extends BaseAPIService {
     }
 
     // Create a new supplier return
-    async createSupplierReturn(params: object): Promise<any> {
+    async createSupplierReturns(params: object): Promise<any> {
         return await this.request(`/admin/supplier_returns`, "POST", params);
     }
 

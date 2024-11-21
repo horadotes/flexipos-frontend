@@ -85,7 +85,8 @@
                                     <div class="w-1/2">
                                         <FormLabel for="return_date" label="Return Date" class="mr-3" />
                                         <FormTextField type="date" id="return_date" name="return_date"
-                                            v-model="masterSupplierReturn.return_date" placeholder="Return Date" />
+                                            v-model="masterSupplierReturn.return_date" placeholder="Return Date"
+                                            required />
                                         <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                         <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                     </div>
@@ -111,16 +112,17 @@
                                 <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
                                     <div class="flex items-center mb-1 gap-5">
                                         <div class="w-1/2">
-                                            <FormLabel for="product_id" label="Product ID" class="" />
-                                            <FormTextField id="product_id" name="product_id"
-                                                v-model="supplierReturnDetail.product_id" placeholder="Product ID" />
+                                            <FormLabel label="Product ID" />
+                                            <FormSelect id="product_id" v-model="supplierReturnDetail.product_id"
+                                                :options="state.products.map(product => ({ value: product.id, label: `${product.name}` }))"
+                                                placeholder="Select a bill" />
                                             <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                             <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                         </div>
                                         <div class="w-1/2">
                                             <FormLabel for="unit" label="Unit" class="mr-3" />
                                             <FormTextField id="unit" name="unit" v-model="supplierReturnDetail.unit"
-                                                placeholder="Unit" />
+                                                placeholder="Unit" readonly class="cursor-default" />
                                             <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                             <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                         </div>
@@ -129,7 +131,8 @@
                                         <div class="w-1/2">
                                             <FormLabel for="expiry_date" label="Expiry Date" class="" />
                                             <FormTextField type="date" id="expiry_date" name="expiry_date"
-                                                v-model="supplierReturnDetail.expiry_date" placeholder="Expiry Date" />
+                                                v-model="supplierReturnDetail.expiry_date" placeholder="Expiry Date"
+                                                readonly class="cursor-default" />
                                             <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                             <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                         </div>
@@ -145,7 +148,8 @@
                                         <div class="w-1/2">
                                             <FormLabel for="price" label="Price" class="" />
                                             <FormNumberField id="price" name="price"
-                                                v-model="supplierReturnDetail.price" placeholder="Price" />
+                                                v-model="supplierReturnDetail.price" placeholder="Price" readonly
+                                                class="cursor-default" />
                                             <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                             <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                         </div>
@@ -321,9 +325,10 @@ import useVuelidate from '@vuelidate/core';
 import { useAlert } from '@/composables/alert';
 import { useI18n } from 'vue-i18n';
 import type { Error } from '@/types/error';
-import { supplierReturnService } from '~/components/api/admin/SupplierReturnService';
 import { billService } from '~/components/api/admin/BillService';
 import { employeeService } from '~/components/api/admin/EmployeeService';
+import { productService } from '~/components/api/admin/ProductService';
+import { supplierReturnService } from '~/components/api/admin/SupplierReturnService';
 import { supplierReturnDetailService } from '~/components/api/admin/SupplierReturnDetailService';
 
 const rules = computed(() => ({
@@ -382,6 +387,17 @@ interface Bill {
     amount: string;
     payment_terms: string;
     is_cancelled: boolean;
+}
+interface Product {
+    id: number;
+    barcode: string;
+    name: string;
+    discount: number;
+    markup: number;
+    current_price: number;
+    expiry_date: string;
+    wholesale_unit: string;
+    is_active: boolean;
 }
 
 interface Employee {
@@ -476,6 +492,7 @@ const state = reactive({
     selectedBillId: null as string | null,
     bills: [] as Bill[],
     employees: [] as Employee[],
+    products: [] as Product[],
     supplierReturnDetails: [] as SupplierReturnDetail[],
     supplierReturns: { data: [] } as SupplierReturn,
 });
@@ -491,6 +508,20 @@ async function fetchBills() {
         state.error = error;
     }
     state.isTableLoading = false;
+}
+
+async function fetchProducts() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await productService.getProducts();
+        state.products = response.data.filter((product: Product) => product.is_active); // Filter active customers
+        console.log('Fetched product:', state.products); // Log fetched active customers
+    } catch (error: any) {
+        state.error = error;
+    } finally {
+        state.isTableLoading = false;
+    }
 }
 
 async function fetchEmployees() {
@@ -521,7 +552,7 @@ async function saveSupplierReturns() {
     try {
         const SupplierReturnData = {
             bill_id: masterSupplierReturn.bill_id,
-            prepared_by_id: user_id,
+            prepared_by_id: user_id.value,
             approved_by_id: masterSupplierReturn.approved_by_id,
             cancelled_by_id: masterSupplierReturn.cancelled_by_id,
             branch_no: masterSupplierReturn.branch_no,
@@ -530,80 +561,48 @@ async function saveSupplierReturns() {
             is_cancelled: masterSupplierReturn.is_cancelled,
         };
 
-        const response = await supplierReturnService.createSupplierReturn(SupplierReturnData);
+        console.log('Supplier return data before save: ', SupplierReturnData);
+        const response = await supplierReturnService.createSupplierReturns(SupplierReturnData);
         console.log(response);
+        // Check if the response is valid and has the expected structure
+        if (response && response.data) {
+            console.log('Supplier Return created successfully:', response.data);
+
+            // Save each bill detail
+            for (const detail of supplierReturnDetailList.value) {
+                const supplierReturnDetailData = {
+                    product_id: detail.product_id,
+                    supplier_return_id: response.data.id,
+                    supplier_return_number: response.data.supplier_return_number,
+                    unit: detail.unit,
+                    expiry_date: detail.expiry_date,
+                    quantity: detail.quantity,
+                    price: detail.price,
+                };
+
+                console.log('Saving bill detail:', supplierReturnDetailData);
+
+                // Attempt to create the supplier return detail
+                const result = await supplierReturnDetailService.createSupplierReturnDetail(supplierReturnDetailData);
+                console.log('Response from createSupplierReturnDetail:', result);
+
+                // Check if the detail save was successful
+                if (result) {
+                    console.log('Bill detail saved successfully:', result);
+                } else {
+                    console.error('Failed to save bill detail:', supplierReturnDetailData);
+                }
+            }
+
+            // Show success alert
+            successAlert(t('alert.bill_created'), t('alert.success'));
+        } else {
+            console.error('Failed to create supplier return:', response);
+            errorAlert(t('Error'), t('Failed to create bill.'));
+        }
     }
     catch (error) {
         console.error('Failed to save Supplier Return:', error);
-    }
-}
-
-async function saveSupplierReturn() {
-    try {
-        if (supplierReturnDetailList.value.length > 0) {
-            console.log('Bill before save:', supplierReturnDetail.value);
-
-            const supplierReturnData = {
-                bill_id: masterSupplierReturn.bill_id,
-                prepared_by_id: user_id,
-                approved_by_id: masterSupplierReturn.approved_by_id,
-                cancelled_by_id: masterSupplierReturn.cancelled_by_id,
-                branch_no: masterSupplierReturn.branch_no,
-                return_date: masterSupplierReturn.return_date,
-                remarks: masterSupplierReturn.remarks,
-                is_cancelled: masterSupplierReturn.is_cancelled,
-            };
-
-            console.log('Supplier Return Data:', supplierReturnData);
-
-            // Attempt to create the supplier return
-            const response = await supplierReturnService.createSupplierReturn(supplierReturnData);
-            console.log('Response from createSupplierReturn:', response);
-
-            // // Check if the response is valid and has the expected structure
-            // if (response && response.data) {
-            //     console.log('Supplier Return created successfully:', response.data);
-
-            //     // Save each bill detail
-            //     for (const detail of supplierReturnDetailList.value) {
-            //         const supplierReturnDetailData = {
-            //             product_id: detail.product_id,
-            //             supplier_return_id: response.data.id,
-            //             unit: detail.unit,
-            //             expiry_date: detail.expiry_date,
-            //             quantity: detail.quantity,
-            //             price: detail.price,
-            //         };
-
-            //         console.log('Saving bill detail:', supplierReturnDetailData);
-
-            //         // Attempt to create the supplier return detail
-            //         const result = await supplierReturnDetailService.createSupplierReturnDetail(supplierReturnDetailData);
-            //         console.log('Response from createSupplierReturnDetail:', result);
-
-            //         // Check if the detail save was successful
-            //         if (result) {
-            //             console.log('Bill detail saved successfully:', result);
-            //         } else {
-            //             console.error('Failed to save bill detail:', supplierReturnDetailData);
-            //         }
-            //     }
-
-            //     // Show success alert
-            //     successAlert(t('alert.bill_created'), t('alert.success'));
-            // } else {
-            //     console.error('Failed to create supplier return:', response);
-            //     errorAlert(t('Error'), t('Failed to create bill.'));
-            // }
-
-            // Refresh the bill list
-            fetchSupplierReturns();
-        } else {
-            errorAlert(t('Error'), t('Please add at least one bill detail.'));
-        }
-    } catch (error) {
-        console.error('Error saving bill:', error);
-        errorAlert(t('Error'), t('An error occurred while saving the bill.'));
     }
 }
 
@@ -655,10 +654,34 @@ function sort(sortingData: { column: string; sort: string }) {
     }
 }
 
+watch(
+    () => supplierReturnDetail.value.product_id,
+    (newProductId) => {
+        // Find the selected product based on the selected product_id
+        const selectedProduct = state.products.find(product => product.id === Number(newProductId));
+
+        // Update the name in billDetail if the selected product exists
+        if (selectedProduct) {
+            supplierReturnDetail.value.unit = selectedProduct.wholesale_unit;
+            supplierReturnDetail.value.expiry_date = selectedProduct.expiry_date;
+            supplierReturnDetail.value.price = selectedProduct.current_price.toString();
+            supplierReturnDetail.value.quantity = '';
+
+        } else {
+            supplierReturnDetail.value.product_id = ''; // Reset name if no product is selected
+            supplierReturnDetail.value.expiry_date = '';
+            supplierReturnDetail.value.price = '';
+            supplierReturnDetail.value.quantity = '';
+            supplierReturnDetail.value.unit = '';
+        }
+    }
+);
+
 onMounted(() => {
     fetchSupplierReturns();
     fetchBills();
     fetchEmployees();
+    fetchProducts();
 });
 
 </script>
