@@ -20,7 +20,7 @@
                         <input type="text" placeholder="Search"
                             class="block w-70 rounded-md border border-gray-400 shadow-sm focus:border-gray-500 focus:ring-gray-500 text-xs pl-8 pr-2 py-1.5" />
                     </div>
-                    <!-- Add Customer Button -->
+                    <!-- Supplier Button -->
                     <div class="mt-4 sm:ml-16 sm:mt-3 sm:flex-none mr-6">
                         <button type="button" @click="toggleForm"
                             class="block rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -28,42 +28,181 @@
                         </button>
                     </div>
                 </div>
-                <!-- Customer Return Form -->
+                <!-- Supplier Return Form -->
                 <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
-                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                        <form @submit.prevent="saveReturn">
-                            <FormLabel label="Return Details" class="text-xl" />
+                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-6xl">
+                        <form @submit.prevent="saveCustomerReturns()">
+                            <FormLabel label="Supplier Return" class="text-xl" />
                             <Alert type="danger" :text="state?.error?.message" v-if="
                                 state.error?.message &&
                                 state.error.message.length > 0
                             " />
                             <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
-                                <FormLabel for="customerreturnno" label="Customer Return No" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormTextField id="customerreturnno" name="customerreturnno"
-                                        v-model="returns.customerReturnNo" placeholder="Customer Return No" />
-                                    <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
-                                    <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                <div class="flex items-center mb-1 gap-5">
+                                    <div class="w-1/2">
+                                        <FormLabel label="Sales Invoice" />
+                                        <FormSelect id="invoiceid" v-model="masterCustomerReturn.sales_invoice_id"
+                                            :options="state.salesinvoices.map(salesinvoice => ({ value: salesinvoice.id, label: `${salesinvoice.id}` }))"
+                                            placeholder="Select a sales invoice" required />
+                                    </div>
+                                    <div class="w-1/2">
+                                        <FormLabel for="prepared_by_id" label="Prepared By" />
+                                        <div class="flex items-center mb-1">
+                                            <FormNumberField for="prepared_by_id" name="prepared_by_id"
+                                                v-model="masterCustomerReturn.prepared_by_id"
+                                                :placeholder="`${firstname} ${lastname}`"
+                                                :value="`${firstname} ${lastname}`" readonly
+                                                class="cursor-default bg-gray-200" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <FormLabel for="productno" label="Product No" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormTextField id="productno" name="productno" v-model="returns.productNo"
-                                        placeholder="Product No" />
-                                    <FormError :error="v$?.productNo?.$errors[0]?.$message.toString()" />
-                                    <FormError :error="state?.error?.errors?.productNo?.[0]" />
+                                <div class="flex items-center mb-1 gap-5">
+                                    <div class="w-1/2">
+                                        <FormLabel label="Approved By" />
+                                        <FormSelect id="approved_by_id" v-model="masterCustomerReturn.approved_by_id"
+                                            :options="state.employees.filter(employee => employee.is_active).map(employee => ({ value: employee.id, label: employee.firstname + ' ' + employee.lastname }))"
+                                            placeholder="Select Employee" required />
+                                        <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                        <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                    </div>
+                                    <div class="w-1/2">
+                                        <FormLabel for="cancelled_by_id" label="Cancelled By" class="" />
+                                        <FormSelect id="cancelled_by_id" v-model="masterCustomerReturn.cancelled_by_id"
+                                            :options="state.employees.filter(employee => employee.is_active).map(employee => ({ value: employee.id, label: employee.firstname + ' ' + employee.lastname }))"
+                                            placeholder="Select Employee" required />
+                                        <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                        <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                    </div>
                                 </div>
-                                <FormLabel for="qty" label="Qty" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="qty" name="qty" v-model="returns.qty" placeholder="Quantity" />
-                                    <FormError :error="v$?.qty?.$errors[0]?.$message.toString()" />
-                                    <FormError :error="state?.error?.errors?.qty?.[0]" />
+                                <div class="flex items-center mb-1 gap-5">
+                                    <div class="w-1/2">
+                                        <FormLabel for="branch_no" label="Branch Number" class="mr-3" />
+                                        <FormTextField id="branch_no" name="branch_no"
+                                            v-model="masterCustomerReturn.branch_number" placeholder="Branch Number" />
+                                        <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                        <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                    </div>
+                                    <div class="w-1/2">
+                                        <FormLabel for="return_date" label="Return Date" class="mr-3" />
+                                        <FormTextField type="date" id="return_date" name="return_date"
+                                            v-model="masterCustomerReturn.return_date" placeholder="Return Date"
+                                            required />
+                                        <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                        <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                    </div>
                                 </div>
-                                <FormLabel for="unitprice" label="Unit Price" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="unitprice" name="unitprice" v-model="returns.unitPrice"
-                                        placeholder="Unit Price" />
-                                    <FormError :error="v$?.unitPrice?.$errors[0]?.$message.toString()" />
-                                    <FormError :error="state?.error?.errors?.unitPrice?.[0]" />
+                                <div class="flex items-center mb-1 gap-5">
+                                    <div class="w-1/2">
+                                        <FormLabel for="remarks" label="Remarks" class="" />
+                                        <FormTextField id="remarks" name="remarks"
+                                            v-model="masterCustomerReturn.remarks" placeholder="Remarks" />
+                                        <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                        <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                    </div>
+                                    <div class="w-1/2">
+                                        <FormLabel label="Is Cancelled" />
+                                        <FormSelect v-model="masterCustomerReturn.is_cancelled" :options="[
+                                            { value: false, label: 'No' },
+                                            { value: true, label: 'Yes' },
+                                        ]">
+                                        </FormSelect>
+                                    </div>
+                                </div>
+                                <FormLabel label="Supplier Return Details" class="text-xl" />
+                                <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
+                                    <div class="flex items-center mb-1 gap-5">
+                                        <div class="w-1/2">
+                                            <FormLabel label="Product ID" />
+                                            <FormSelect id="product_id" v-model="customerReturnDetail.product_id"
+                                                :options="state.products.map(product => ({ value: product.id, label: `${product.name}` }))"
+                                                placeholder="Select product" />
+                                            <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                            <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                        </div>
+                                        <div class="w-1/2">
+                                            <FormLabel for="unit" label="Unit" class="mr-3" />
+                                            <FormTextField id="unit" name="unit" v-model="customerReturnDetail.unit"
+                                                placeholder="Unit" readonly class="cursor-default" />
+                                            <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                            <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center mb-1 gap-5">
+                                        <div class="w-1/2">
+                                            <FormLabel for="expiry_date" label="Expiry Date" class="" />
+                                            <FormTextField type="date" id="expiry_date" name="expiry_date"
+                                                v-model="customerReturnDetail.expiry_date" placeholder="Expiry Date"
+                                                readonly class="cursor-default" />
+                                            <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                            <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                        </div>
+                                        <div class="w-1/2">
+                                            <FormLabel for="quantity" label="Quantity" class="mr-3" />
+                                            <FormNumberField id="quantity" name="quantity"
+                                                v-model="customerReturnDetail.quantity" placeholder="Quantity" />
+                                            <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                            <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center mb-1 gap-5">
+                                        <div class="w-1/2">
+                                            <FormLabel for="price" label="Price" class="" />
+                                            <FormNumberField id="price" name="price"
+                                                v-model="customerReturnDetail.price" placeholder="Price" readonly
+                                                class="cursor-default" />
+                                            <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
+                                            <FormError :error="state?.error?.errors?.returnNo?.[0]" />
+                                        </div>
+                                        <div class="w-1/2">
+                                            <FormLabel for="remarks" label="0" class="text-white" />
+                                            <FormButton class="px-10" buttonStyle="xxx"
+                                                @click.prevent="addSupplierReturnDetails">Add Detail</FormButton>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 mt-6">
+                                        <thead class="bg-gray-900 text-white">
+                                            <tr>
+                                                <th scope="col" class="px-4 py-2 text-left text-xxs font-light">Product
+                                                    Name
+                                                </th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xxs font-light">Unit
+                                                </th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xxs font-light">Expiry
+                                                    Date</th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xxs font-light">Quantity
+                                                </th>
+                                                <th scope="col" class="px-4 py-2 text-left text-xxs font-light">Price
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-gray-100">
+                                            <tr v-for="(supplierDetail, index) in customerReturnDetailList" :key="index"
+                                                class="border-t bg-gray-50">
+                                                <td class="px-4 py-2 text-xxs text-gray-700">{{
+                                                    supplierDetail.product_id }}</td>
+                                                <td class="px-4 py-2 text-xxs text-gray-700">{{
+                                                    supplierDetail.unit }}
+                                                </td>
+                                                <td class="px-4 py-2 text-xxs text-gray-700">{{
+                                                    supplierDetail.expiry_date }}</td>
+                                                <td class="px-4 py-2 text-xxs text-gray-700">{{
+                                                    supplierDetail.quantity }}
+                                                </td>
+                                                <td class="px-4 py-2 text-xxs text-gray-700">{{
+                                                    supplierDetail.price }}
+                                                </td>
+                                            </tr>
+                                            <tr v-if="customerReturnDetailList.length === 0">
+                                                <td colspan="8"
+                                                    class="px-4 py-2 text-xxs text-gray-500 text-center bg-gray-100">No
+                                                    sales invoice
+                                                    details
+                                                    available.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                                 <div class="flex justify-end gap-2 mt-4">
                                     <FormButton type="submit" buttonStyle="success" class="w-full">
@@ -78,13 +217,13 @@
                     </div>
                 </div>
                 <!-- View Details -->
-                <div v-if="returnToView"
+                <!-- <div v-if="returnToView"
                     class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
                     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
                         <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Return No:</label>
-                                <span>{{ returns?.customerReturnNo }}</span>
+                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Supplier Return No:</label>
+                                <span>{{ returns?.supplierReturnNo }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
                                 <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Product No:</label>
@@ -95,8 +234,8 @@
                                 <span>{{ returns?.qty }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Unit Price:</label>
-                                <span>{{ returns?.unitPrice }}</span>
+                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Cost Per Quantity:</label>
+                                <span>{{ returns?.costperqty }}</span>
                             </div>
                             <div class="flex justify-end gap-2 mt-4">
                                 <button @click="returnToView = null"
@@ -106,47 +245,45 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
+                <!-- Payments List Table -->
                 <div>
                     <Alert type="danger" :text="state.error?.message" v-if="state.error" />
                     <div class="table-responsive">
-                        <Table :columnHeaders="state.columnHeaders" :data="state.returns"
+                        <Table :columnHeaders="state.columnHeaders" :data="state.customerReturns"
                             :isLoading="state.isTableLoading" :sortData="state.sortData" @sort="sort">
                             <template #body
-                                v-if="!(state.isTableLoading || (state.returns?.data && state.returns?.data.length === 0))">
-                                <tr v-for="(returns, index) in state.returns?.data" :key="index">
+                                v-if="!(state.isTableLoading || (state.customerReturns?.data && state.customerReturns?.data.length === 0))">
+                                <tr v-for="(returns, index) in state.customerReturns?.data" :key="index">
                                     <td>
                                         <span class="truncate pl-3">{{ returns.id }}</span>
                                     </td>
                                     <td>
-                                        <span class="pl-3">{{ returns.salesinvoiceno }}</span>
+                                        <span class="pl-3">{{ returns.sales_invoice_id }}</span>
                                     </td>
                                     <td>
-                                        <span class="pl-3">{{ returns.returndate }}</span>
+                                        <span class="pl-3">{{ returns.prepared_by_id }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="pl-3">{{ returns.approved_by_id }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="pl-3">{{ returns.cancelled_by_id }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="pl-3">{{ returns.branch_no }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="pl-3">{{ returns.return_date }}</span>
                                     </td>
                                     <td>
                                         <span class="pl-3">{{ returns.remarks }}</span>
                                     </td>
                                     <td>
-                                        <span class="pl-3">{{ returns.preparedby }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="pl-3">{{ returns.approvedby }}</span>
-                                    </td>
-                                    <td>
                                         <span class="pl-3"
-                                            :class="returns.iscancelled ? 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20' : 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'">
-                                            {{ returns.iscancelled ? 'Cancelled' : 'Active' }}
+                                            :class="returns.is_cancelled ? 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20' : 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'">
+                                            {{ returns.is_cancelled ? 'Cancelled' : 'Active' }}
                                         </span>
-                                    </td>
-                                    <td>
-                                        <span class="pl-3">{{ returns.cancelledby }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="pl-3">{{ returns.created_at }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="pl-3">{{ returns.updated_at }}</span>
                                     </td>
                                     <td class="px-4 py-2 text-xxs text-gray-700">
                                         <div class="flex space-x-2">
@@ -172,7 +309,7 @@
                                 </tr>
                             </template>
                             <div>
-                                <Pagination :data="state.returns" @previous="previous" @next="next" />
+                                <Pagination :data="state.customerReturns" @previous="previous" @next="next" />
                             </div>
                         </Table>
                     </div>
@@ -184,198 +321,365 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
-//import { customerService } from '~/components/api/admin/CustomerReturns';
-import { helpers, required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
 import { useAlert } from '@/composables/alert';
 import { useI18n } from 'vue-i18n';
 import type { Error } from '@/types/error';
+import { employeeService } from '~/components/api/admin/EmployeeService';
+import { productService } from '~/components/api/admin/ProductService';
+import { salesInvoiceService } from '~/components/api/admin/SalesInvoiceService';
+import { customerReturnService } from '~/components/api/admin/CustomerReturnService';
+import { customerReturnDetailService } from '~/components/api/admin/CustomerReturnDetailService';
 
 const rules = computed(() => ({
 
 }));
 
+const user_id = computed(() => localStorage.getItem('user_id'));
+const firstname = computed(() => localStorage.getItem('firstname'));
+const lastname = computed(() => localStorage.getItem('lastname'));
 const runtimeConfig = useRuntimeConfig();
 
 
 const v$ = useVuelidate(rules, {});
-
 // Alert and i18n setup
-const { successAlert } = useAlert();
-const { errorAlert } = useAlert();
-const { t } = useI18n()
+const { successAlert, errorAlert, warningAlert } = useAlert();
+const { t } = useI18n();
 
 let currentTablePage = 1;
-
 
 function previous() {
     if (currentTablePage > 1) {
         currentTablePage--;
-        // fetchCustomerReturns();
+        fetchCustomerReturns();
     }
 }
 
 const returnToEdit = ref<number | null>(null);
 
 
-function next() {
-    if (currentTablePage < state.returns.pagination.totalPages) {
-        currentTablePage++;
-        //fetchCustomerReturns();
-    }
-}
+// function next() {
+//     if (currentTablePage < state.supplierReturns.totalPages) {
+//         currentTablePage++;
+//         //fetchSupplierReturns();
+//     }
+// }
 
-interface Returns {
-    data: any[];
-    pagination: {
-        currentPage: number;
-        totalPages: number;
-    };
+function next() {
+    if (currentTablePage < state.customerReturns.data.length) {
+        currentTablePage++;
+        fetchCustomerReturns();
+    }
 }
 
 interface SortData {
     sortField: string;
     sortOrder: "ascend" | "descend" | null;
 }
+
+interface SalesInvoice {
+    id: string;
+    branch_id: string;
+    sales_order_id: string;
+    custoemr_id: string;
+    prepared_by_id: string;
+    sales_representatative: string;
+    cancelled_by_id: string;
+    approved_by_id: string;
+    invoice_no: string;
+    date: string;
+    due_date: string;
+    terms: string;
+    amount: string;
+    document_no: string;
+    remarks: string;
+    is_cancelled: string;
+    is_approved: string;
+}
+interface Product {
+    id: number;
+    barcode: string;
+    name: string;
+    discount: number;
+    markup: number;
+    current_price: number;
+    expiry_date: string;
+    wholesale_unit: string;
+    is_active: boolean;
+}
+
+interface Employee {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    phone: string;
+    position: string;
+    is_active: boolean;
+}
+
+interface CustomerReturn {
+    data: any[];
+}
+
+interface CustomerReturnDetail {
+    product_id: string;
+    unit: string;
+    expiry_date: string;
+    quantity: string;
+    price: string;
+}
+
+const masterCustomerReturn = {
+    sales_invoice_id: '',
+    prepared_by_id: '',
+    approved_by_id: '',
+    cancelled_by_id: '',
+    branch_number: '',
+    return_date: '',
+    remarks: '',
+    is_cancelled: false,
+}
+
+const customerReturnDetail = ref<{
+    product_id: string,
+    unit: string,
+    expiry_date: string,
+    quantity: string,
+    price: string,
+}>({
+    product_id: '',
+    unit: '',
+    expiry_date: '',
+    quantity: '',
+    price: '',
+});
+
+const customerReturnDetailList = ref<Array<typeof customerReturnDetail.value>>([]);
+const addSupplierReturnDetails = () => {
+    if (customerReturnDetail.value.price === '') {
+        warningAlert(t('Error'), t('Please enter all fields.'));
+        return;
+    }
+
+    // Add to supplierReturnDetailList
+    customerReturnDetailList.value.push({
+        ...customerReturnDetail.value
+    });
+
+    // Reset supplierReturnDetail
+    resetSupplierReturnDetail();
+};
+
+const resetSupplierReturnDetail = () => {
+    customerReturnDetail.value = {
+        product_id: '',
+        unit: '',
+        expiry_date: '',
+        quantity: '',
+        price: '',
+    };
+};
+
 const state = reactive({
     columnHeaders: [
         { name: "id", sorter: true, key: "id" },
-        { name: "salesinvoiceno", sorter: true, key: "salesinvoiceno" },
-        { name: "return date", sorter: true, key: "returndate" },
-        { name: "remarks", sorter: false, key: "remarks" },
-        { name: "preparedBy", sorter: true, key: "preparedby" },
-        { name: "approvedBy", sorter: true, key: "approvedby" },
-        { name: "asCancelled", sorter: true, key: "iscancelled" },
-        { name: "cancelledBy", sorter: true, key: "cancelledby" },
-        { name: "created_at", sorter: true, key: "created_at" },
-        { name: "updated_at", sorter: true, key: "updated_at" },
+        { name: "sales_invoice_id", sorter: true, key: "invoiceid" },
+        { name: "prepared_by_id", sorter: true, key: "prepared_by_id" },
+        { name: "approved_by_id", sorter: true, key: "approved_by_id" },
+        { name: "cancelled_by_id", sorter: true, key: "cancelled_by_id" },
+        { name: "branch_no", sorter: true, key: "branch_no" },
+        { name: "return_date", sorter: true, key: "return_date" },
+        { name: "remarks", sorter: true, key: "remarks" },
+        { name: "is_cancelled", sorter: true, key: "is_cancelled" },
         { name: "Actions", key: "actions" },
     ],
     error: null as Error | null,
     isTableLoading: false,
     sortData: { sortField: "", sortOrder: null } as SortData,
-    returns: { data: [], pagination: { currentPage: 1, totalPages: 1 } } as Returns,
+    selectedSalesInvoiceId: null as string | null,
+    salesinvoices: [] as SalesInvoice[],
+    employees: [] as Employee[],
+    products: [] as Product[],
+    customerReturnDetails: [] as CustomerReturnDetail[],
+    customerReturns: { data: [] } as CustomerReturn,
 });
 
-const returns = ref<{
-    id: number | null;
-    salesinvoiceno: string;
-    returndate: string;
-    remarks: string;
-    preparedby: string;
-    approvedby: string;
-    iscancelled: boolean;
-    cancelledby: string;
-    created_at: string;
-    updated_at: string;
-    customerReturnNo: string;
-    productNo: string;
-    qty: string;
-    unitPrice: string;
-    is_active: true,
-}>
-    ({
-        id: null,
-        salesinvoiceno: '',
-        returndate: '',
-        remarks: '',
-        preparedby: '',
-        approvedby: '',
-        iscancelled: false,
-        cancelledby: '',
-        created_at: '',
-        updated_at: '',
-        customerReturnNo: '',
-        productNo: '',
-        qty: '',
-        unitPrice: '',
-        is_active: true,
-    });
-
-const returnToView = ref<number | null>(null);
-
-async function saveReturn() {
+async function fetchSalesInvoices() {
+    state.isTableLoading = true;
+    state.error = null;
     try {
-        const returnData = {
-            customerReturnNo: returns.value.customerReturnNo,
-            productNo: returns.value.productNo,
-            qty: returns.value.qty,
-            unitPrice: returns.value.unitPrice,
-        };
+        const response = await salesInvoiceService.getSalesInvoices(); // Assuming this is your service to fetch bills
+        state.salesinvoices = response.data; // Adjust if necessary based on API response structure
+        console.log('Fetched sales invoices:', response.data);
+    } catch (error: any) {
+        state.error = error;
+    }
+    state.isTableLoading = false;
+}
 
-        let response;
-
-        if (returnToEdit.value) {
-            // response = await customerService.updateReturn(returnToEdit.value, returnData);
-            if (response) {
-                successAlert(`${t('alert.Success')}!`, `${t('alert.returnSuccessfullyUpdated')}.`);
-            } else {
-                errorAlert(`${t('alert.Error')}!`, `${t('alert.returnUpdateFailed')}.`);
-            }
-        } else {
-            // response = await customerService.createReturn(returnData);
-            if (response) {
-                successAlert(`${t('alert.Success')}!`, `${t('alert.returnSuccessfullyCreated')}.`);
-            } else {
-                errorAlert(`ERROR!`, `${t('alert.returnCreationFailed')}.`);
-            }
-        }
-
-        //fetchCustomerReturns(); 
-        toggleForm();
-    } catch (error) {
-        // console.error('Error saving return:', error.message);
-        errorAlert(`ERROR!`, `${t('alert.errorOccurredWhileSavingReturn')}.`);
+async function fetchProducts() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await productService.getProducts();
+        state.products = response.data.filter((product: Product) => product.is_active); // Filter active customers
+        console.log('Fetched product:', state.products); // Log fetched active customers
+    } catch (error: any) {
+        state.error = error;
+    } finally {
+        state.isTableLoading = false;
     }
 }
 
+async function fetchEmployees() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await employeeService.getEmployees();
+        state.employees = response.data.filter((employee: Employee) => employee.is_active); // Filter active customers
+        console.log('Fetched employees:', state.employees); // Log fetched active customers
+    } catch (error: any) {
+        state.error = error;
+    } finally {
+        state.isTableLoading = false;
+    }
+}
+
+async function fetchCustomerReturns() {
+    try {
+        const response = await customerReturnService.getCustomerReturns();
+        state.customerReturns = response; // Assuming the response structure contains the employee data
+        console.log(response);
+    } catch (error) {
+        console.error('Failed to fetch Supplier Return:', error);
+    }
+}
+
+async function saveCustomerReturns() {
+    try {
+        const customerReturnData = {
+            sales_invoice_id: masterCustomerReturn.sales_invoice_id,
+            prepared_by_id: user_id.value,
+            approved_by_id: masterCustomerReturn.approved_by_id,
+            cancelled_by_id: masterCustomerReturn.cancelled_by_id,
+            branch_number: masterCustomerReturn.branch_number,
+            return_date: masterCustomerReturn.return_date,
+            remarks: masterCustomerReturn.remarks,
+            is_cancelled: masterCustomerReturn.is_cancelled,
+        };
+
+        const response = await customerReturnService.createCustomerReturn(customerReturnData);
+        console.log(response);
+        if (response && response.data) {
+            for (const detail of customerReturnDetailList.value) {
+                const customerReturnDetailData = {
+                    product_id: detail.product_id,
+                    customer_return_id: response.data.id,
+                    customer_return_number: response.data.customer_return_number,
+                    unit: detail.unit,
+                    expiry_date: detail.expiry_date,
+                    quantity: detail.quantity,
+                    price: detail.price,
+                };
+
+                const result = await customerReturnDetailService.createCustomerReturnDetail(customerReturnDetailData);
+                console.log(result);
+
+                if (result) {
+                    successAlert('Success', 'Customer Detail saved successfully.');
+                } else {
+                    warningAlert('Warning', 'Customer Return Detail warning alert');
+                }
+            }
+            // Show success alert
+            successAlert(t('alert.bill_created'), t('alert.success'));
+        }
+    } catch (error: any) {
+        errorAlert('Error', 'Error in: ' + error);
+    }
+}
+
+// async function saveSupplierReturns() {
+//     try {
+//         const SupplierReturnData = {
+//             bill_id: masterSupplierReturn.bill_id,
+//             prepared_by_id: user_id.value,
+//             approved_by_id: masterSupplierReturn.approved_by_id,
+//             cancelled_by_id: masterSupplierReturn.cancelled_by_id,
+//             branch_no: masterSupplierReturn.branch_no,
+//             return_date: masterSupplierReturn.return_date,
+//             remarks: masterSupplierReturn.remarks,
+//             is_cancelled: masterSupplierReturn.is_cancelled,
+//         };
+
+//         console.log('Supplier return data before save: ', SupplierReturnData);
+//         const response = await supplierReturnService.createSupplierReturns(SupplierReturnData);
+//         console.log(response);
+//         // Check if the response is valid and has the expected structure
+//         if (response && response.data) {
+//             console.log('Supplier Return created successfully:', response.data);
+
+//             // Save each bill detail
+//             for (const detail of supplierReturnDetailList.value) {
+//                 const supplierReturnDetailData = {
+//                     product_id: detail.product_id,
+//                     supplier_return_id: response.data.id,
+//                     supplier_return_number: response.data.supplier_return_number,
+//                     unit: detail.unit,
+//                     expiry_date: detail.expiry_date,
+//                     quantity: detail.quantity,
+//                     price: detail.price,
+//                 };
+
+//                 console.log('Saving bill detail:', supplierReturnDetailData);
+
+//                 // Attempt to create the supplier return detail
+//                 const result = await supplierReturnDetailService.createSupplierReturnDetail(supplierReturnDetailData);
+//                 console.log('Response from createSupplierReturnDetail:', result);
+
+//                 // Check if the detail save was successful
+//                 if (result) {
+//                     console.log('Bill detail saved successfully:', result);
+//                 } else {
+//                     console.error('Failed to save bill detail:', supplierReturnDetailData);
+//                 }
+//             }
+
+//             // Show success alert
+//             successAlert(t('alert.bill_created'), t('alert.success'));
+//         } else {
+//             console.error('Failed to create supplier return:', response);
+//             errorAlert(t('Error'), t('Failed to create bill.'));
+//         }
+//     }
+//     catch (error) {
+//         console.error('Failed to save Supplier Return:', error);
+//     }
+// }
+
+const returnToView = ref<number | null>(null);
+
+
 function viewReturn(id: number) {
-    const selectedReturns = state.returns.data.find(r => r.id === id);
+    const selectedReturns = state.customerReturns.data.find(r => r.id === id);
     if (selectedReturns) {
-        returns.value = { ...selectedReturns };
+        selectedReturns.value = { ...selectedReturns };
         returnToView.value = id;
     } else {
         console.error(`Return with ID ${id} not found.`);
-        errorAlert(`${t('alert.Error')}!`, `${t('alert.errorOccuredWhileViewingCustomer')}.`);
+        errorAlert(`${t('alert.Error')}!`, `${t('alert.errorOccuredWhileViewingSupplierReturn')}.`);
     }
 }
 const showForm = ref(false);
 
 function toggleForm() {
     showForm.value = !showForm.value;
-    if (!showForm.value) {
-        returns.value = {
-            id: null,
-            salesinvoiceno: '',
-            returndate: '',
-            remarks: '',
-            preparedby: '',
-            approvedby: '',
-            iscancelled: false,
-            cancelledby: '',
-            created_at: '',
-            updated_at: '',
-            customerReturnNo: '',
-            productNo: '',
-            qty: '',
-            unitPrice: '',
-            is_active: true,
-        };
-        returnToEdit.value = null;
-    }
 }
 
 
 function editReturn(id: number) {
-    const selectedReturn = state.returns.data.find(r => r.id === id);
 
-    if (selectedReturn) {
-        returns.value = { ...selectedReturn };
-        returnToEdit.value = id;
-        showForm.value = true;
-    } else {
-        errorAlert(`${t('alert.Error')}!`, `${t('alert.customerNotFound' + ' With ID:' + { id })}.`);
-    }
 }
 
 function sort(sortingData: { column: string; sort: string }) {
@@ -392,7 +696,36 @@ function sort(sortingData: { column: string; sort: string }) {
             sortOrder: 'ascend',
         };
     }
-    //fetchCustomerReturns();
 }
+
+watch(
+    () => customerReturnDetail.value.product_id,
+    (newProductId) => {
+        // Find the selected product based on the selected product_id
+        const selectedProduct = state.products.find(product => product.id === Number(newProductId));
+
+        // Update the name in sales invoice detail if the selected product exists
+        if (selectedProduct) {
+            customerReturnDetail.value.unit = selectedProduct.wholesale_unit;
+            customerReturnDetail.value.expiry_date = selectedProduct.expiry_date;
+            customerReturnDetail.value.price = selectedProduct.current_price.toString();
+            customerReturnDetail.value.quantity = '';
+
+        } else {
+            customerReturnDetail.value.product_id = ''; // Reset name if no product is selected
+            customerReturnDetail.value.expiry_date = '';
+            customerReturnDetail.value.price = '';
+            customerReturnDetail.value.quantity = '';
+            customerReturnDetail.value.unit = '';
+        }
+    }
+);
+
+onMounted(() => {
+    fetchCustomerReturns();
+    fetchSalesInvoices();
+    fetchEmployees();
+    fetchProducts();
+});
 
 </script>
