@@ -274,7 +274,7 @@ const navigation = [
             { name: "Damages / Spoilage", href: "/admin/damages", icon: CreditCardIcon, current: false },
         ],
     },
-    { name: "Roles / Permissions", href: "/roles", icon: LockClosedIcon, current: false },
+    // { name: "Roles / Permissions", href: "/roles", icon: LockClosedIcon, current: false },
     {
         name: "Returns", href: "/roles", icon: LockClosedIcon, current: false,
         children: [

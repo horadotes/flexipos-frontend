@@ -42,7 +42,7 @@
                                     <div class="w-1/2">
                                         <FormLabel label="Bill" />
                                         <FormSelect id="billid" v-model="masterSupplierReturn.bill_id"
-                                            :options="state.bills.map(bill => ({ value: bill.id, label: `${bill.id}` }))"
+                                            :options="state.bills.map(bill => ({ value: bill.id, label: `id: ${bill.id}, P.O.#: ${bill.purchase_order_no}` }))"
                                             placeholder="Select a bill" required />
                                     </div>
                                     <div class="w-1/2">

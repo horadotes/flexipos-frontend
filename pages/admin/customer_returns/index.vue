@@ -42,7 +42,7 @@
                                     <div class="w-1/2">
                                         <FormLabel label="Sales Invoice" />
                                         <FormSelect id="invoiceid" v-model="masterCustomerReturn.sales_invoice_id"
-                                            :options="state.salesinvoices.map(salesinvoice => ({ value: salesinvoice.id, label: `${salesinvoice.id}` }))"
+                                            :options="state.salesinvoices.map(salesinvoice => ({ value: salesinvoice.id, label: `${salesinvoice.invoice_no}` }))"
                                             placeholder="Select a sales invoice" required />
                                     </div>
                                     <div class="w-1/2">
@@ -599,64 +599,6 @@ async function saveCustomerReturns() {
         errorAlert('Error', 'Error in: ' + error);
     }
 }
-
-// async function saveSupplierReturns() {
-//     try {
-//         const SupplierReturnData = {
-//             bill_id: masterSupplierReturn.bill_id,
-//             prepared_by_id: user_id.value,
-//             approved_by_id: masterSupplierReturn.approved_by_id,
-//             cancelled_by_id: masterSupplierReturn.cancelled_by_id,
-//             branch_no: masterSupplierReturn.branch_no,
-//             return_date: masterSupplierReturn.return_date,
-//             remarks: masterSupplierReturn.remarks,
-//             is_cancelled: masterSupplierReturn.is_cancelled,
-//         };
-
-//         console.log('Supplier return data before save: ', SupplierReturnData);
-//         const response = await supplierReturnService.createSupplierReturns(SupplierReturnData);
-//         console.log(response);
-//         // Check if the response is valid and has the expected structure
-//         if (response && response.data) {
-//             console.log('Supplier Return created successfully:', response.data);
-
-//             // Save each bill detail
-//             for (const detail of supplierReturnDetailList.value) {
-//                 const supplierReturnDetailData = {
-//                     product_id: detail.product_id,
-//                     supplier_return_id: response.data.id,
-//                     supplier_return_number: response.data.supplier_return_number,
-//                     unit: detail.unit,
-//                     expiry_date: detail.expiry_date,
-//                     quantity: detail.quantity,
-//                     price: detail.price,
-//                 };
-
-//                 console.log('Saving bill detail:', supplierReturnDetailData);
-
-//                 // Attempt to create the supplier return detail
-//                 const result = await supplierReturnDetailService.createSupplierReturnDetail(supplierReturnDetailData);
-//                 console.log('Response from createSupplierReturnDetail:', result);
-
-//                 // Check if the detail save was successful
-//                 if (result) {
-//                     console.log('Bill detail saved successfully:', result);
-//                 } else {
-//                     console.error('Failed to save bill detail:', supplierReturnDetailData);
-//                 }
-//             }
-
-//             // Show success alert
-//             successAlert(t('alert.bill_created'), t('alert.success'));
-//         } else {
-//             console.error('Failed to create supplier return:', response);
-//             errorAlert(t('Error'), t('Failed to create bill.'));
-//         }
-//     }
-//     catch (error) {
-//         console.error('Failed to save Supplier Return:', error);
-//     }
-// }
 
 const returnToView = ref<number | null>(null);
 
