@@ -36,11 +36,6 @@
 
                         <template #body>
                             <!-- Check if the table is loading or has no data -->
-                            <tr v-if="!state.isTableLoading && filteredData.length === 0">
-                                <td class="text-center py-4" colspan="9">
-                                    No bill is available
-                                </td>
-                            </tr>
                             <!-- Display rows if data exists -->
                             <tr v-for="(bill, index) in filteredData" :key="index">
                                 <td class="pl-3">
@@ -80,16 +75,16 @@
                                                     clip-rule="evenodd" />
                                             </svg>
                                         </button>
-                                        <button @click="editBill(bill.id)" class="text-gray-600 hover:text-gray-900">
+                                        <!-- <button @click="editBill(bill.id)" class="text-gray-600 hover:text-gray-900">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
                                                 fill="currentColor">
                                                 <path
                                                     d="M17.414 2.586a2 2 0 00-2.828 0l-10 10V16a1 1 0 001 1h3.414l10-10a2 2 0 000-2.828l-1.586-1.586zM5 13l-1.5 1.5V13h1.5zm4.5-4.5L14 4l2 2-4.5 4.5H9.5V8.5z" />
                                             </svg>
-                                        </button>
-                                        <button @click="deleteBill(bill.id)" class="text-red-600 hover:text-red-900">
+                                        </button> -->
+                                        <!-- <button @click="deleteBill(bill.id)" class="text-red-600 hover:text-red-900">
                                             Cancel
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </td>
                             </tr>
@@ -142,46 +137,48 @@
                             <span class="font-semibold">{{ billToView.payment_terms }}</span>
                         </div>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th
-                                    class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                    Bill ID
-                                </th>
-                                <th
-                                    class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                    Product ID
-                                </th>
-                                <th
-                                    class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                    Unit
-                                </th>
-                                <th
-                                    class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                    Expiry Date
-                                </th>
-                                <th
-                                    class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                    Quantity
-                                </th>
-                                <th
-                                    class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                    Price
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="detail in billDetailsToView" :key="detail.id">
-                                <td class="border px-4 py-2">{{ detail.bill_id }}</td>
-                                <td class="border px-4 py-2">{{ detail.product_id }}</td>
-                                <td class="border px-4 py-2">{{ detail.unit }}</td>
-                                <td class="border px-4 py-2">{{ detail.expiry_date }}</td>
-                                <td class="border px-4 py-2">{{ detail.quantity }}</td>
-                                <td class="border px-4 py-2">{{ detail.price }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th
+                                        class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Bill ID
+                                    </th>
+                                    <th
+                                        class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Product ID
+                                    </th>
+                                    <th
+                                        class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Unit
+                                    </th>
+                                    <th
+                                        class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Expiry Date
+                                    </th>
+                                    <th
+                                        class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Quantity
+                                    </th>
+                                    <th
+                                        class="border px-4 py-2 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Price
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="detail in billDetailsToView" :key="detail.id">
+                                    <td class="border px-4 py-2">{{ detail.bill_id }}</td>
+                                    <td class="border px-4 py-2">{{ detail.product_name }}</td>
+                                    <td class="border px-4 py-2">{{ detail.unit }}</td>
+                                    <td class="border px-4 py-2">{{ detail.expiry_date }}</td>
+                                    <td class="border px-4 py-2">{{ detail.quantity }}</td>
+                                    <td class="border px-4 py-2">{{ detail.price }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="flex justify-end gap-2 mt-4">
                         <button @click="billToView = null"
@@ -403,12 +400,39 @@ const viewBill = async (id: number) => {
         const allBillDetails = await billDetailService.getBillDetails();
 
         billToView.value = bill.data;
-        billDetailsToView.value = allBillDetails.data.filter((detail: { bill_id: number }) => detail.bill_id === id);
+
+        // Filter bill details by bill_id
+        billDetailsToView.value = allBillDetails.data
+            .filter((detail: { bill_id: number }) => detail.bill_id === id)
+            .map((detail: { product_id: number;[key: string]: any }) => {
+                // Find the product name from the already fetched state.products
+                const selectedProduct = state.products.find((product: { id: number }) => product.id === detail.product_id);
+
+                // Return the bill detail with product name
+                return {
+                    ...detail,
+                    product_name: selectedProduct ? selectedProduct.name : 'Unknown Product', // Default if product is not found
+                };
+            });
+        console.log('Fetched bill details:', billDetailsToView.value); // Log fetched bill details
 
     } catch (error) {
         console.error('Failed to fetch bill details:', error);
     }
 };
+
+// const viewBill = async (id: number) => {
+//     try {
+//         const bill = await billService.getBillById(id);
+//         const allBillDetails = await billDetailService.getBillDetails();
+
+//         billToView.value = bill.data;
+//         billDetailsToView.value = allBillDetails.data.filter((detail: { bill_id: number }) => detail.bill_id === id);
+
+//     } catch (error) {
+//         console.error('Failed to fetch bill details:', error);
+//     }
+// };
 
 const editBill = async (id: number) => {
 
@@ -425,7 +449,7 @@ const sort = async (sortData: SortData) => {
 const searchQuery = ref('');
 
 function sanitizeSearchQuery() {
-    searchQuery.value = searchQuery.value.replace(/[^a-zA-Z]/g, '');
+    searchQuery.value = searchQuery.value.replace(/[^a-zA-Z]/g, ' ');
 }
 
 const filteredData = computed(() => {

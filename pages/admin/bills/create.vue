@@ -129,10 +129,8 @@
                     </div>
                 </div>
             </div>
-
-
             <!-- Second Table (inside the form) -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto">
                 <table class="min-w-full divide-y divide-gray-200 mt-10 rounded">
                     <thead class="bg-gray-900 text-white">
                         <tr>
@@ -272,13 +270,6 @@ const showBillForm = ref(false);
 onMounted(() => {
     fetchBills();
 });
-
-const rules = computed(() => ({
-    bill: {
-        date: { required: helpers.withMessage('This field is required.', required) },
-        supplier: { required: helpers.withMessage('This field is required.', required) },
-    },
-}));
 
 const bill = ref({
     supplier_id: '',
@@ -518,7 +509,7 @@ async function saveBill() {
 
 
 const addBillDetails = () => {
-    if (billDetail.value.price === '') {
+    if (billDetail.value.price === '' && billDetail.value.expiry_date === '' && billDetail.value.quantity === '') {
         warningAlert(t('Error'), t('Please enter all fields.'));
         return;
     }

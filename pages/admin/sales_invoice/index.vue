@@ -6,10 +6,10 @@
                 <Title>Sales Invoice - {{ runtimeConfig.public.appName }}</Title>
             </Head>
             <main>
-                <!-- Search and Add Product Button Container -->
-                <div class="relative flex items-center space-x-4 mt-3">
+                <!-- Add Button and Description -->
+                <div class="sm:flex sm:items-center sm:justify-between">
                     <!-- Search Bar -->
-                    <div class="relative flex flex-1">
+                    <div class="relative flex flex-1 ml-8 mt-5">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500"
                             viewBox="0 0 20 20" fill="currentColor">
@@ -20,14 +20,16 @@
                         <input type="text" placeholder="Search"
                             class="block w-70 rounded-md border border-gray-400 shadow-sm focus:border-gray-500 focus:ring-gray-500 text-xs pl-8 pr-2 py-1.5" />
                     </div>
-
-                    <!-- Add Product Button -->
-                    <button @click="goToSalesInvoice" type="button"
-                        class="rounded-md bg-gray-900 px-3 py-2 text-center text-xxs font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 flex items-center justify-center gap-2">
-                        <PlusIcon class="h-3 w-3" aria-hidden="true" />
-                        Create Sales Invoice
-                    </button>
+                    <!-- Add Customer Button -->
+                    <div class="mt-4 sm:ml-16 sm:mt-3 sm:flex-none mr-8">
+                        <button type="button" @click="goToSalesInvoice"
+                            class="block rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            ADD SALES
+                        </button>
+                    </div>
                 </div>
+                <!-- <PlusIcon class="h-3 w-3" aria-hidden="true" /> -->
+
                 <!--Product Table-->
                 <div>
                     <Alert type="danger" :text="state.error?.message" v-if="state.error" />
@@ -44,47 +46,54 @@
                                         <span class="pl-3 pr-3">{{ invoices.invoice_no }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.document_no }}</span>
+                                        <span class="ml-2">{{ invoices.document_no }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.prepared_by_id }}</span>
+                                        <span class="ml-2">{{ invoices.prepared_by_id }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.customer_id }}</span>
+                                        <span class="ml-2">{{ invoices.customer_id }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.sales_representative }}</span>
+                                        <span class="ml-2">{{ invoices.sales_representative }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.date }}</span>
+                                        <span class="ml-2">{{ invoices.date }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.due_date }}</span>
+                                        <span class="ml-2">{{ invoices.due_date }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.terms }}</span>
+                                        <span class="ml-3">{{ invoices.terms }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.amount }}</span>
+                                        <span class="ml-2">{{ invoices.amount }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.cancelled_by_id }}</span>
+                                        <span class="ml-2">{{ invoices.cancelled_by_id }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.approved_by_id }}</span>
+                                        <span class="ml-2">{{ invoices.approved_by_id }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.is_cancelled }}</span>
+                                        <span class="ml-2"
+                                            :class="invoices.is_cancelled ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
+                                            {{ invoices.is_cancelled ? 'Cancelled' : 'Not Cancelled' }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.is_approved }}</span>
+                                        <span class="ml-2"
+                                            :class="invoices.is_approved ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
+                                            {{ invoices.is_approved ? 'Approved' : 'Disapproved' }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <span>{{ invoices.remarks }}</span>
+                                        <span class="ml-2">{{ invoices.remarks }}</span>
                                     </td>
                                     <td class="pl-1 py-2 text-xxs text-gray-700">
-                                        <div class="flex space-x-2">
-                                            <button @click="" class="text-gray-600 hover:text-gray-900">
+                                        <div class="flex">
+                                            <button @click="() => viewSalesInvoice(invoices.id)"
+                                                class="text-gray-600 hover:text-gray-900 mr-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
                                                     viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                                     <path fill-rule="evenodd"
@@ -93,21 +102,17 @@
                                                 </svg>
                                             </button>
 
-                                            <button @click="" class="text-gray-600 hover:text-gray-900">
+                                            <!-- <button @click="" class="text-gray-600 hover:text-gray-900 mr-2">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
                                                     viewBox="0 0 20 20" fill="currentColor">
                                                     <path
                                                         d="M17.414 2.586a2 2 0 00-2.828 0l-10 10V16a1 1 0 001 1h3.414l10-10a2 2 0 000-2.828l-1.586-1.586zM5 13l-1.5 1.5V13h1.5zm4.5-4.5L14 4l2 2-4.5 4.5H9.5V8.5z" />
                                                 </svg>
                                             </button>
-                                            <button @click="" class="text-red-600 hover:text-red-900">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
-                                                    viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd"
-                                                        d="M6 2a2 2 0 00-2 2v1H2v2h1v9a2 2 0 002 2h8a2 2 0 002-2V7h1V5h-2V4a2 2 0 00-2-2H6zm4 12a1 1 0 102 0V8a1 1 0 10-2 0v6zm-3-1a1 1 0 002 0V8a1 1 0 10-2 0v5zm8-1a1 1 0 10-2 0V8a1 1 0 102 0v5z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                            </button>
+
+                                            <button @click="" class="text-red-600 hover:text-red-900 mr-1">
+                                                Cancel
+                                            </button> -->
                                         </div>
                                     </td>
                                 </tr>
@@ -116,14 +121,64 @@
                     </div>
                     <Pagination :data="state.salesInvoices" @previous="previous" @next="next" />
                 </div>
+                <!-- View Details Modal -->
+                <div v-if="salesInvoiceToView"
+                    class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+                        <div class="text-center mb-10">
+                            <h2 class="text-xl font-semibold text-gray-800">Sales Invoice Details</h2>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 mx-4">
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Invoice No:</label>
+                                <span class="font-semibold">{{ salesInvoiceToView.invoice_no }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Document No:</label>
+                                <span class="font-semibold">{{ salesInvoiceToView.document_no }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Prepared By:</label>
+                                <span class="font-semibold">{{ salesInvoiceToView.prepared_by_id }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Customer ID:</label>
+                                <span class="font-semibold">{{ salesInvoiceToView.customer_id }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Sales Representative:</label>
+                                <span class="font-semibold">{{ salesInvoiceToView.sales_representative }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Amount:</label>
+                                <span class="font-semibold">{{ salesInvoiceToView.amount }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Is Cancelled:</label>
+                                <span
+                                    :class="salesInvoiceToView.is_cancelled ?
+                                        'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' :
+                                        'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
+                                    {{ salesInvoiceToView.is_cancelled ? 'Yes' : 'No' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button @click="salesInvoiceToView = null"
+                                class="rounded-md bg-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </main>
         </NuxtLayout>
     </div>
 </template>
 
 <script setup lang="ts">
+
 import { ref, computed } from 'vue';
-import { PlusIcon } from '@heroicons/vue/24/outline';
 import { salesInvoiceService } from '~/components/api/admin/SalesInvoiceService';
 import { employeeService } from '~/components/api/admin/EmployeeService';
 import { customerService } from '~/components/api/admin/CustomerService';
@@ -156,22 +211,22 @@ interface Customer {
     email: string;
     phone: string;
     address: string;
-    is_active: boolean; // Changed to boolean
+    is_active: boolean;
 }
 
 const state = reactive({
     columnHeaders: [
-        { name: "Invoice No", sorter: true, key: "invoice_no" },
-        { name: "Document No", sorter: true, key: "document_no" },
-        { name: "Prepared By", sorter: true, key: "prepared_by_id" },
+        { name: "Invoice_no", sorter: true, key: "invoice_no" },
+        { name: "Document_no", sorter: true, key: "document_no" },
+        { name: "Prepared_by", sorter: true, key: "prepared_by_id" },
         { name: "Customer", sorter: true, key: "customer_id" },
         { name: "Sales Representative", sorter: true, key: "sales_representative" },
         { name: "Date", sorter: true, key: "date" },
         { name: "Due Date", sorter: true, key: "due_date" },
         { name: "Terms", sorter: true, key: "terms" },
         { name: "Amount", sorter: true, key: "amount" },
-        { name: "Cancelled By", sorter: true, key: "cancelled_by_id" },
-        { name: "Approved By", sorter: true, key: "approved_by_id" },
+        { name: "Cancelled_by", sorter: true, key: "cancelled_by_id" },
+        { name: "Approved_by", sorter: true, key: "approved_by_id" },
         { name: "Cancelled", sorter: true, key: "is_cancelled" },
         { name: "Approved", sorter: true, key: "is_approved" },
         { name: "Remarks", sorter: true, key: "remarks" },
@@ -208,7 +263,7 @@ async function fetchEmployees() {
     state.error = null;
     try {
         const response = await employeeService.getEmployees();
-        state.employees = response.data; // Adjust if necessary based on API response structure
+        state.employees = response.data;
         state.salesInvoices.data.forEach(invoices => {
             const selectedEmployee = state.employees.find(employee => employee.id === invoices.prepared_by_id);
             invoices.prepared_by_id = selectedEmployee ? `${selectedEmployee.firstname} ${selectedEmployee.lastname}` : 'Unknown'; // Fallback if employee not found
@@ -229,7 +284,7 @@ async function fetchCustomers() {
     state.error = null;
     try {
         const response = await customerService.getCustomers();
-        state.customers = response.data; // Adjust if necessary based on API response structure
+        state.customers = response.data;
         state.salesInvoices.data.forEach(invoices => {
             const selectedCustomer = state.customers.find(customer => customer.id === invoices.customer_id);
             invoices.customer_id = selectedCustomer ? `${selectedCustomer.firstname} ${selectedCustomer.lastname}` : 'Unknown'; // Fallback if employee not found
@@ -263,6 +318,17 @@ async function fetchSalesInvoice() {
 function goToSalesInvoice() {
     navigateTo('sales_invoice/create');
 }
+const salesInvoiceToView = ref<any>(null); // Store the selected invoice details
+
+const viewSalesInvoice = async (id: number) => {
+    try {
+        // Fetch detailed invoice info (modify according to your API)
+        const response = await salesInvoiceService.getSalesInvoiceById(id); // assuming this method exists
+        salesInvoiceToView.value = response.data; // Store the fetched invoice details
+    } catch (error) {
+        console.error('Failed to fetch invoice details:', error);
+    }
+};
 
 function editSale(index: number) {
 
@@ -283,4 +349,5 @@ function next() {
 onMounted(() => {
     fetchSalesInvoice();
 });
+
 </script>

@@ -94,7 +94,7 @@
                         <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
                             <div class="flex items-center mb-1 ml-7">
                                 <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Inv Adjustment No:</label>
-                                <span>{{ adjustments?.invadjustmentno }}</span>
+                                <span>{{ adjustments?.id }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
                                 <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Product No:</label>
@@ -269,38 +269,23 @@ const state = reactive({
 
 const adjustments = ref<{
     id: number | null;
-    branchno: string;
-    adjustmentdate: string;
+    prepared_by_id: string;
+    approved_by_id: string;
+    cancelled_by_id: string;
+    branch_number: string;
+    adjustment_date: string;
     remarks: string;
-    preparedby: string;
-    approvedby: string;
-    iscancelled: boolean;
-    cancelledby: string;
-    created_at: string;
-    updated_at: string;
-    invadjustmentno: string;
-    productNo: string;
-    qty: string;
-    costperqty: string;
-    is_active: true,
-}>
-    ({
-        id: null,
-        branchno: '',
-        adjustmentdate: '',
-        remarks: '',
-        preparedby: '',
-        approvedby: '',
-        iscancelled: false,
-        cancelledby: '',
-        created_at: '',
-        updated_at: '',
-        invadjustmentno: '',
-        productNo: '',
-        qty: '',
-        costperqty: '',
-        is_active: true,
-    });
+    is_cancelled: boolean;
+}>({
+    id: null,
+    prepared_by_id: '',
+    approved_by_id: '',
+    cancelled_by_id: '',
+    branch_number: '',
+    adjustment_date: '',
+    remarks: '',
+    is_cancelled: true,
+});
 
 const adjustmentToView = ref<number | null>(null);
 
@@ -357,20 +342,13 @@ function toggleForm() {
     if (!showForm.value) {
         adjustments.value = {
             id: null,
-            branchno: '',
-            adjustmentdate: '',
+            prepared_by_id: '',
+            approved_by_id: '',
+            cancelled_by_id: '',
+            branch_number: '',
+            adjustment_date: '',
             remarks: '',
-            preparedby: '',
-            approvedby: '',
-            iscancelled: false,
-            cancelledby: '',
-            created_at: '',
-            updated_at: '',
-            invadjustmentno: '',
-            productNo: '',
-            qty: '',
-            costperqty: '',
-            is_active: true,
+            is_cancelled: true,
         };
         adjustmentToEdit.value = null;
     }

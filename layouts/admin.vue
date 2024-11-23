@@ -270,8 +270,8 @@ const navigation = [
             { name: "Bills Payment", href: "/admin/bills_payment", icon: CreditCardIcon, current: false },
             { name: "Sales Invoice", href: "/admin/sales_invoice", icon: DocumentTextIcon, current: false },
             { name: "Collections", href: "/admin/collections", icon: DocumentDuplicateIcon, current: false },
-            { name: "Credit Memo", href: "/admin/creditmemo", icon: UserCircleIcon, current: false },
-            { name: "Damages / Spoilage", href: "/admin/damages", icon: CreditCardIcon, current: false },
+            { name: "Credit Memo", href: "/admin/credit_memo", icon: UserCircleIcon, current: false },
+            //{ name: "Damages / Spoilage", href: "/admin/damages", icon: CreditCardIcon, current: false },
         ],
     },
     // { name: "Roles / Permissions", href: "/roles", icon: LockClosedIcon, current: false },
@@ -282,7 +282,7 @@ const navigation = [
             { name: "Supplier Returns", href: "/admin/supplier_returns", icon: ArrowLongLeftIcon, current: false },
         ],
     },
-    { name: "Reports", href: "/roles", icon: ChartBarSquareIcon, current: false },
+    //{ name: "Reports", href: "/roles", icon: ChartBarSquareIcon, current: false },
 ];
 
 const userNavigation = [

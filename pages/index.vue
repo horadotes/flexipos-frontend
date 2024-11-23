@@ -14,7 +14,7 @@
                         <a href="#" class="-m-1.5 p-1.5">
                             <span class="sr-only">Your Company</span>
                             <!-- <img class="h-10 w-auto ml-11" src="/public/images/Logo.png" alt="" /> -->
-                            <h1 class="logo">FlexiPOS</h1>
+                            <h1 class="logo">flexipos</h1>
                         </a>
                     </div>
                     <div class="flex lg:hidden">
@@ -488,7 +488,7 @@
                                 <li v-for="item in footerNavigation.solutions" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                    }}</a>
+                                        }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -498,7 +498,7 @@
                                 <li v-for="item in footerNavigation.support" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                    }}</a>
+                                        }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -510,7 +510,7 @@
                                 <li v-for="item in footerNavigation.company" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                    }}</a>
+                                        }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -520,7 +520,7 @@
                                 <li v-for="item in footerNavigation.legal" :key="item.name">
                                     <a :href="item.href" class="text-sm leading-6 text-gray-300 hover:text-white">{{
                                         item.name
-                                    }}</a>
+                                        }}</a>
                                 </li>
                             </ul>
                         </div>

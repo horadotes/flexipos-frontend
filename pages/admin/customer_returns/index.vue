@@ -42,8 +42,8 @@
                                     <div class="w-1/2">
                                         <FormLabel label="Sales Invoice" />
                                         <FormSelect id="invoiceid" v-model="masterCustomerReturn.sales_invoice_id"
-                                            :options="state.salesinvoices.map(salesinvoice => ({ value: salesinvoice.id, label: `${salesinvoice.invoice_no}` }))"
-                                            placeholder="Select a sales invoice" required />
+                                            :options="salesInvoiceOptions" placeholder="Select a sales invoice"
+                                            required />
                                     </div>
                                     <div class="w-1/2">
                                         <FormLabel for="prepared_by_id" label="Prepared By" />
@@ -78,7 +78,8 @@
                                     <div class="w-1/2">
                                         <FormLabel for="branch_no" label="Branch Number" class="mr-3" />
                                         <FormTextField id="branch_no" name="branch_no"
-                                            v-model="masterCustomerReturn.branch_number" placeholder="Branch Number" />
+                                            v-model="masterCustomerReturn.branch_number" placeholder="Branch Number"
+                                            required />
                                         <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                         <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                     </div>
@@ -95,7 +96,7 @@
                                     <div class="w-1/2">
                                         <FormLabel for="remarks" label="Remarks" class="" />
                                         <FormTextField id="remarks" name="remarks"
-                                            v-model="masterCustomerReturn.remarks" placeholder="Remarks" />
+                                            v-model="masterCustomerReturn.remarks" placeholder="Remarks" required />
                                         <FormError :error="v$?.returnNo?.$errors[0]?.$message.toString()" />
                                         <FormError :error="state?.error?.errors?.returnNo?.[0]" />
                                     </div>
@@ -330,6 +331,7 @@ import { productService } from '~/components/api/admin/ProductService';
 import { salesInvoiceService } from '~/components/api/admin/SalesInvoiceService';
 import { customerReturnService } from '~/components/api/admin/CustomerReturnService';
 import { customerReturnDetailService } from '~/components/api/admin/CustomerReturnDetailService';
+import { customerService } from '~/components/api/admin/CustomerService';
 
 const rules = computed(() => ({
 
@@ -381,7 +383,7 @@ interface SalesInvoice {
     id: string;
     branch_id: string;
     sales_order_id: string;
-    custoemr_id: string;
+    customer_id: string;
     prepared_by_id: string;
     sales_representatative: string;
     cancelled_by_id: string;
@@ -415,6 +417,18 @@ interface Employee {
     email: string;
     phone: string;
     position: string;
+    is_active: boolean;
+}
+
+interface Customer {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    phone: string;
+    address: string;
+    contact_person: string;
+    contact_person_phone: string;
     is_active: boolean;
 }
 
@@ -499,6 +513,7 @@ const state = reactive({
     sortData: { sortField: "", sortOrder: null } as SortData,
     selectedSalesInvoiceId: null as string | null,
     salesinvoices: [] as SalesInvoice[],
+    customers: [] as Customer[],
     employees: [] as Employee[],
     products: [] as Product[],
     customerReturnDetails: [] as CustomerReturnDetail[],
@@ -537,8 +552,40 @@ async function fetchEmployees() {
     state.error = null;
     try {
         const response = await employeeService.getEmployees();
-        state.employees = response.data.filter((employee: Employee) => employee.is_active); // Filter active customers
-        console.log('Fetched employees:', state.employees); // Log fetched active customers
+        const activeEmployees = response.data.filter((employee: Employee) => employee.is_active);
+        state.employees = activeEmployees;
+        console.log('Fetched employees:', activeEmployees);
+
+        // Create a map for easy lookup
+        const employeeMap = new Map(activeEmployees.map((emp: Employee) => [emp.id, `${emp.firstname} ${emp.lastname}`]));
+
+        // Update the prepared_by_id, approved_by_id, and cancelled_by_id in customerReturns
+        state.customerReturns.data = state.customerReturns.data.map(returnData => {
+            const preparedByName = employeeMap.get(returnData.prepared_by_id) || returnData.prepared_by_id;
+            const approvedByName = employeeMap.get(returnData.approved_by_id) || returnData.approved_by_id;
+            const cancelledByName = employeeMap.get(returnData.cancelled_by_id) || returnData.cancelled_by_id;
+            return {
+                ...returnData,
+                prepared_by_id: preparedByName,
+                approved_by_id: approvedByName,
+                cancelled_by_id: cancelledByName,
+            };
+        });
+
+    } catch (error: any) {
+        state.error = error;
+    } finally {
+        state.isTableLoading = false;
+    }
+}
+
+async function fetchCustomers() {
+    state.isTableLoading = true;
+    state.error = null;
+    try {
+        const response = await customerService.getCustomers();
+        state.customers = response.data.filter((customer: Customer) => customer.is_active); // Filter active customers
+        console.log('Fetched employees:', state.customers); // Log fetched active customers
     } catch (error: any) {
         state.error = error;
     } finally {
@@ -554,6 +601,20 @@ async function fetchCustomerReturns() {
     } catch (error) {
         console.error('Failed to fetch Supplier Return:', error);
     }
+}
+
+function resetForm() {
+    Object.assign(masterCustomerReturn, {
+        sales_invoice_id: '',
+        prepared_by_id: '',
+        approved_by_id: '',
+        cancelled_by_id: '',
+        branch_number: '',
+        return_date: '',
+        remarks: '',
+        is_cancelled: false,
+    });
+    customerReturnDetailList.value = [];
 }
 
 async function saveCustomerReturns() {
@@ -588,6 +649,8 @@ async function saveCustomerReturns() {
 
                 if (result) {
                     successAlert('Success', 'Customer Detail saved successfully.');
+                    toggleForm();
+                    resetForm();
                 } else {
                     warningAlert('Warning', 'Customer Return Detail warning alert');
                 }
@@ -623,6 +686,17 @@ function toggleForm() {
 function editReturn(id: number) {
 
 }
+
+const salesInvoiceOptions = computed(() => {
+    return state.salesinvoices.map(salesinvoice => {
+        const customer = state.customers.find(customer => customer.id === salesinvoice.customer_id);
+        const customerName = customer ? `${customer.firstname} ${customer.lastname}` : salesinvoice.customer_id;
+        return {
+            value: salesinvoice.id,
+            label: `${salesinvoice.invoice_no} (${customerName})`
+        };
+    });
+});
 
 function sort(sortingData: { column: string; sort: string }) {
     currentTablePage = 1;
@@ -668,6 +742,7 @@ onMounted(() => {
     fetchSalesInvoices();
     fetchEmployees();
     fetchProducts();
+    fetchCustomers();
 });
 
 </script>

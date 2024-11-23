@@ -7,7 +7,7 @@
                     <Title>Products - {{ runtimeConfig.public.appName }}</Title>
                 </Head>
                 <div class="sm:flex sm:items-center sm:justify-between">
-                    <!-- Search Bar -->
+                    <!--Search Bar-->
                     <div class="relative flex flex-1 ml-8 mt-5">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500"
@@ -16,120 +16,123 @@
                                 d="M9 3a6 6 0 11-6 6 6 6 0 016-6zM2 9a7 7 0 1114 0A7 7 0 012 9zm11.293 4.293a1 1 0 00-1.415-1.414L10 12.586l-1.879-1.878a1 1 0 00-1.415 1.414L8.586 14l-1.879 1.879a1 1 0 001.415 1.415L10 15.414l1.879 1.879a1 1 0 001.415-1.415L11.414 14l1.879-1.879a1 1 0 000-1.415z"
                                 clip-rule="evenodd" />
                         </svg>
-                        <input type="text" placeholder="Search"
-                            class="block w-70 rounded-md border border-gray-400 shadow-sm focus:border-gray-500 focus:ring-gray-500 text-xs pl-8 pr-2 py-1.5" />
+                        <input type="text" placeholder="Search" v-model="searchQuery" @input="sanitizeSearchQuery"
+                            class="block w-75 rounded-md border border-gray-400 text-sm pl-8 pr-3 py-1.5" />
                     </div>
-                    <!-- Add Product Button -->
+                    <!-- Adjustment Button -->
                     <div class="mt-4 sm:ml-16 sm:mt-3 sm:flex-none mr-6">
-                        <button type="button" @click="toggleForm"
+                        <button type="button" @click="navigateToCreate"
                             class="block rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                             Add Product
                         </button>
                     </div>
                 </div>
-                <div class="sm:flex sm:items-center sm:justify-between mt-4 ml-8">
-                    <div class="sm:flex-auto">
-                        <h1 class="text-base font-semibold leading-6 text-gray-900">Products</h1>
-                        <p class="mt-2 text-sm text-gray-700">A list of all the products and their details.</p>
-                    </div>
-                </div>
+
                 <!-- Product Form -->
                 <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
-                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-5xl">
                         <form @submit.prevent="saveProduct">
-                            <FormLabel label="Product Details" class="text-xl" />
+                            <div class="w-full text-center font-semibold mb-6">
+                                <FormLabel label="Product Details" class="text-xl" />
+                            </div>
                             <Alert type="danger" :text="state?.error?.message"
                                 v-if="state.error?.message && state.error.message.length > 0" />
-                            <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
-                                <FormLabel for="product_category_id" label="Category" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormSelect id="product_category_id" v-model="product.product_category_id"
-                                        :options="state.categories.filter(category => category.is_active).map(category => ({ value: category.id, label: category.name }))"
-                                        placeholder="Select a category" required />
-                                    <FormError :error="state?.error?.errors?.product_category_id?.[0]" />
+                            <div class="grid grid-cols-2 gap-4 mt-3 mx-2">
+                                <div>
+                                    <FormLabel for="product_category_id" label="Category" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormSelect id="product_category_id" v-model="product.product_category_id"
+                                            :options="state.categories.filter(category => category.is_active).map(category => ({ value: category.id, label: category.name }))"
+                                            placeholder="Select a category" required />
+                                        <FormError :error="state?.error?.errors?.product_category_id?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="barcode" label="Barcode" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormTextField id="barcode" name="barcode" v-model="product.barcode"
+                                            placeholder="Barcode" required />
+                                        <FormError :error="state?.error?.errors?.barcode?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="productname" label="Product Name" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormTextField id="productname" name="productname" v-model="product.name"
+                                            placeholder="Product Name" required @input="filterProductName" />
+                                        <FormError :error="state?.error?.errors?.name?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="brandname" label="Brand Name" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormTextField id="brandname" name="brandname" v-model="product.brand"
+                                            placeholder="Brand Name" required @input="filterBrandName" />
+                                        <FormError :error="state?.error?.errors?.brand?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="wholesaleunit" label="Wholesale Unit" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormSelect id="wholesaleunit" name="wholesaleunit"
+                                            v-model="product.wholesale_unit" :options="wholesaleUnitOptions"
+                                            placeholder="Wholesale Unit" />
+                                        <FormError :error="state?.error?.errors?.wholesale_unit?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="retailunit" label="Retail Unit" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormNumberField id="retailunit" name="retailunit" v-model="product.retail_unit"
+                                            placeholder="Retail Unit" required />
+                                        <FormError :error="state?.error?.errors?.retail_unit?.[0]" />
+                                    </div>
                                 </div>
 
-                                <FormLabel for="barcode" label="Barcode" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="barcode" name="barcode" v-model="product.barcode"
-                                        placeholder="Barcode" />
-                                    <FormError :error="state?.error?.errors?.barcode?.[0]" />
+                                <div>
+                                    <FormLabel for="wholesale_quantity" label="Retail Qty" class="mr-5" />
+                                    <div class="flex items-center mb-1">
+                                        <FormNumberField id="wholesale_quantity" name="wholesale_quantity"
+                                            v-model="product.wholesale_quantity" min="0" placeholder="Retail Qty"
+                                            required />
+                                        <FormError :error="state?.error?.errors?.wholesale_quantity?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="reorder_point" label="Reorder Point" class="mr-5" />
+                                    <div class="flex items-center mb-1">
+                                        <FormNumberField id="reorder_point" name="reorder_point"
+                                            v-model="product.reorder_point" min="0" placeholder="Reorder Point"
+                                            required />
+                                        <FormError :error="state?.error?.errors?.reorder_point?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="markup" label="Markup" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormNumberField id="markup" name="markup" v-model="product.markup" min="0"
+                                            max="100" placeholder="Markup" required />
+                                        <span></span>
+                                        <FormError :error="state?.error?.errors?.markup?.[0]" />
+                                    </div>
+
+                                    <FormLabel for="quantity_onhand" label="Quantity On Hand" class="mr-3" />
+                                    <div class="flex items-center mb-1">
+                                        <FormNumberField id="quantity_onhand" name="quantity_onhand"
+                                            v-model="product.quantity_onhand" placeholder="0" value="0" readonly
+                                            class="cursor-default bg-gray-200" />
+                                    </div>
+
+                                    <div class="mb-1">
+                                        <FormLabel for="status" label="Status" class="mr-3" />
+                                        <FormSelectField v-model="selectedIsActive" :options="activeInactiveOptions" />
+                                        <FormError :error="state?.error?.errors?.is_active?.[0]" />
+                                    </div>
                                 </div>
 
-                                <FormLabel for="productname" label="Product Name" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormTextField id="productname" name="productname" v-model="product.name"
-                                        placeholder="Product Name" required />
-                                    <FormError :error="state?.error?.errors?.name?.[0]" />
-                                </div>
-
-                                <FormLabel for="brandname" label="Brand Name" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormTextField id="brandname" name="brandname" v-model="product.brand"
-                                        placeholder="Brand Name" />
-                                    <FormError :error="state?.error?.errors?.brand?.[0]" />
-                                </div>
-
-                                <FormLabel for="wholesaleunit" label="Wholesale Unit" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormSelect id="wholesaleunit" name="wholesaleunit" v-model="product.wholesale_unit"
-                                        :options="wholesaleUnitOptions" placeholder="Wholesale Unit" />
-                                    <FormError :error="state?.error?.errors?.wholesale_unit?.[0]" />
-                                </div>
-
-                                <FormLabel for="retailunit" label="Retail Unit" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="retailunit" name="retailunit" v-model="product.retail_unit"
-                                        placeholder="Retail Unit" />
-                                    <FormError :error="state?.error?.errors?.retail_unit?.[0]" />
-                                </div>
-
-                                <FormLabel for="wholesale_quantity" label="Retail Qty" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="wholesale_quantity" name="wholesale_quantity"
-                                        v-model="product.wholesale_quantity" min="0" placeholder="Retail Qty" />
-                                    <FormError :error="state?.error?.errors?.wholesale_quantity?.[0]" />
-                                </div>
-
-                                <FormLabel for="reorder_point" label="Reorder Point" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="reorder_point" name="reorder_point"
-                                        v-model="product.reorder_point" min="0" placeholder="Reorder Point" />
-                                    <FormError :error="state?.error?.errors?.reorder_point?.[0]" />
-                                </div>
-
-                                <FormLabel for="markup" label="Markup" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="markup" name="markup" v-model="product.markup" min="0"
-                                        max="100" placeholder="Markup" />
-                                    <span>%</span>
-                                    <FormError :error="state?.error?.errors?.markup?.[0]" />
-                                </div>
-
-                                <FormLabel for="quantity_onhand" label="Quantity On Hand" class="mr-3" />
-                                <div class="flex items-center mb-1">
-                                    <FormNumberField id="quantity_onhand" name="quantity_onhand"
-                                        v-model="product.quantity_onhand" placeholder="0" value="0" readonly
-                                        class="cursor-default bg-gray-200" />
-                                </div>
-
-                                <div class="mb-1">
-                                    <FormLabel for="is_active" label="isActive" class="mr-3" />
-                                    <FormSelectField v-model="selectedIsActive" :options="activeInactiveOptions" />
-                                    <FormError :error="state?.error?.errors?.is_active?.[0]" />
-                                </div>
-
-                                <div class="flex justify-end gap-2 mt-4">
-                                    <FormButton type="submit" buttonStyle="success" class="w-full">
-                                        Save
-                                    </FormButton>
-                                    <FormButton @click="toggleForm" buttonStyle="xxx" class="w-full">
-                                        Cancel
-                                    </FormButton>
-                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-9">
+                                <FormButton type="submit" buttonStyle="success" class="w-full">
+                                    Save
+                                </FormButton>
+                                <FormButton @click="toggleForm" buttonStyle="xxx" class="w-full">
+                                    Cancel
+                                </FormButton>
                             </div>
                         </form>
-
                     </div>
                 </div>
 
@@ -137,60 +140,54 @@
                 <div v-if="productToView"
                     class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
                     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                        <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
-                            <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Category:</label>
-                                <span>{{ state.products.data.find(p => p.id ===
-                                    productToView)?.categoryname
-                                    }}</span>
+                        <div class="text-center mb-7">
+                            <h2 class="text-xl font-semibold text-gray-800">Product Details</h2>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 mt-3 mx-2 items-center">
+                            <div class="flex items-center mb-1 ml-7 ">
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Category:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.categoryname }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Product Name:</label>
-                                <span>{{ state.products.data.find(p => p.id ===
-                                    productToView)?.name
-                                    }}</span>
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Product Name:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.name }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Brand Name:</label>
-                                <span>{{ state.products.data.find(p => p.id ===
-                                    productToView)?.brand
-                                    }}</span>
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Brand Name:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.brand }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Qty on Hand:</label>
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Qty on Hand:</label>
                                 <span>{{ state.products.data.find(p => p.id === productToView)?.quantity_onhand
                                     }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Unit:</label>
-                                <span>{{ state.products.data.find(p => p.id === productToView)?.wholesale_unit
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Unit:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.wholesale_unit }}</span>
+                            </div>
+                            <div class="flex items-center mb-1 ml-7">
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Retail Unit:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.retail_unit }}</span>
+                            </div>
+                            <div class="flex items-center mb-1 ml-7">
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Retail Qty:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.wholesale_quantity
                                     }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Retail Unit:</label>
-                                <span>{{ state.products.data.find(p => p.id === productToView)?.retail_unit
-                                    }}</span>
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Reorder Point:</label>
+                                <span>{{ state.products.data.find(p => p.id === productToView)?.reorder_point }}</span>
                             </div>
                             <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Retail Qty:</label>
-                                <span>{{ state.products.data.find(p => p.id ===
-                                    productToView)?.wholesale_quantity }}</span>
-                            </div>
-                            <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Reorder Point:</label>
-                                <span>{{ state.products.data.find(p => p.id === productToView)?.reorder_point
-                                    }}</span>
-                            </div>
-                            <div class="flex items-center mb-1 ml-7">
-                                <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Markup:</label>
+                                <label class="text-xs font-medium text-gray-700 w-32 mr-2">Markup:</label>
                                 <span>{{ state.products.data.find(p => p.id === productToView)?.markup }}</span>
                             </div>
-                            <div class="flex justify-end gap-2 mt-4">
-                                <button @click="productToView = null"
-                                    class="rounded-md bg-gray-200 px-4 py-2 text-xxs font-semibold text-gray-700 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300">
-                                    Close
-                                </button>
-                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button @click="productToView = null"
+                                class="rounded-md bg-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300">
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -199,50 +196,47 @@
                 <div>
                     <Alert type="danger" :text="state.error?.message" v-if="state.error" />
                     <div class="table-responsive">
-                        <Table :columnHeaders="state.columnHeaders" :data="state.products"
+                        <Table :columnHeaders="state.columnHeaders" :data="{ data: filteredData }"
                             :isLoading="state.isTableLoading" :sortData="state.sortData" @sort="sort">
-                            <template #body v-if="!(
-                                state.isTableLoading ||
-                                (state.products?.data &&
-                                    state.products?.data.length === 0)
-                            )">
-                                <tr v-for="(product, index) in state.products?.data" :key="index">
+                            <template #body
+                                v-if="!(state.isTableLoading || (filteredData && filteredData.length === 0))">
+                                <tr v-for="(product, index) in filteredData" :key="index">
                                     <td>
                                         <span class="pl-3 pr-3">{{ product.barcode }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.name }}</span>
+                                        <span class="ml-2">{{ product.name }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.categoryname }}</span>
+                                        <span class="ml-2">{{ product.categoryname }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.brand }}</span>
+                                        <span class="ml-3">{{ product.brand }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.quantity_onhand }}</span>
+                                        <span class="ml-16">{{ product.quantity_onhand }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.wholesale_unit }}</span>
+                                        <span class="ml-3">{{ product.wholesale_unit }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.retail_unit }}</span>
+                                        <span class="ml-5">{{ product.retail_unit }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.wholesale_quantity }}</span>
+                                        <span class="ml-10">{{ product.wholesale_quantity }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.current_price }}</span>
+                                        <span class="ml-10">{{ product.current_price }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.reorder_point }}</span>
+                                        <span class="ml-10">{{ product.reorder_point }}</span>
                                     </td>
                                     <td>
-                                        <span>{{ product.markup + "%" }}</span>
+                                        <span class="ml-2">{{ product.markup + "%" }}</span>
                                     </td>
 
                                     <td>
-                                        <span
+                                        <span class="ml-2"
                                             :class="product.is_active
                                                 ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20'
                                                 : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
@@ -251,7 +245,7 @@
                                     </td>
 
                                     <td class="pl-1 py-2 text-xxs text-gray-700">
-                                        <div class="flex space-x-2">
+                                        <div class="flex ml-2">
                                             <button @click="viewProduct(product.id)"
                                                 class="text-gray-600 hover:text-gray-900">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
@@ -261,7 +255,6 @@
                                                         clip-rule="evenodd" />
                                                 </svg>
                                             </button>
-
                                             <button @click="editProduct(product.id)"
                                                 class="text-gray-600 hover:text-gray-900">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
@@ -270,7 +263,7 @@
                                                         d="M17.414 2.586a2 2 0 00-2.828 0l-10 10V16a1 1 0 001 1h3.414l10-10a2 2 0 000-2.828l-1.586-1.586zM5 13l-1.5 1.5V13h1.5zm4.5-4.5L14 4l2 2-4.5 4.5H9.5V8.5z" />
                                                 </svg>
                                             </button>
-                                            <button @click="deleteProduct(product.id)"
+                                            <!-- <button @click="deleteProduct(product.id)"
                                                 class="text-red-600 hover:text-red-900">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
                                                     viewBox="0 0 20 20" fill="currentColor">
@@ -278,7 +271,7 @@
                                                         d="M6 2a2 2 0 00-2 2v1H2v2h1v9a2 2 0 002 2h8a2 2 0 002-2V7h1V5h-2V4a2 2 0 00-2-2H6zm4 12a1 1 0 102 0V8a1 1 0 10-2 0v6zm-3-1a1 1 0 002 0V8a1 1 0 10-2 0v5zm8-1a1 1 0 10-2 0V8a1 1 0 102 0v5z"
                                                         clip-rule="evenodd" />
                                                 </svg>
-                                            </button>
+                                            </button> -->
                                         </div>
                                     </td>
                                 </tr>
@@ -297,8 +290,8 @@
 import { ref, reactive, onMounted } from 'vue';
 import { productService } from '~/components/api/admin/ProductService.js';
 import { productCategoryService } from '@/components/api/admin/ProductCategoryService.js';
-import useVuelidate from '@vuelidate/core';
 import { helpers, required } from '@vuelidate/validators';
+import { useI18n } from 'vue-i18n';
 
 const runtimeConfig = useRuntimeConfig();
 let currentTablePage = 1;
@@ -351,7 +344,7 @@ const state = reactive({
         { name: "Current Price", sorter: true, key: "current_price" },
         { name: "Reorder Point", sorter: true, key: "reorderpoint" },
         { name: "Markup", sorter: true, key: "markup" },
-        { name: "Is Active", sorter: true, key: "is_active" },
+        { name: "Status", sorter: true, key: "is_active" },
         { name: "Actions", key: "actions" },
     ],
     error: null as Error | null,
@@ -365,6 +358,11 @@ onMounted(() => {
     fetchProducts();
     fetchProductCategory();
 });
+
+const { errorAlert } = useAlert();
+const { successAlert } = useAlert();
+const { t } = useI18n()
+
 
 async function fetchProductCategory() {
     state.isTableLoading = true;
@@ -487,7 +485,6 @@ const product = ref({
     quantity_onhand: '0',
 });
 
-const v$ = useVuelidate(rules, { product });
 
 const productToEdit = ref<number | null>(null);
 
@@ -496,7 +493,6 @@ watch(() => product.value.product_category_id, (id) => {
     const selectedCategory = state.categories.find(category => category.id === id);
     product.value.categoryname = selectedCategory ? selectedCategory.name : '';
 });
-
 async function saveProduct() {
     try {
         console.log('Product before save:', product.value);
@@ -520,11 +516,11 @@ async function saveProduct() {
         if (productToEdit.value) {
             // Update existing product.
             response = await productService.updateProduct(productToEdit.value, products);
-            alert(response ? 'Product has been updated!' : 'Product update failed!');
+            successAlert(`${t('alert.Success')}!`, `Product updated successfully!`);
         } else {
             // Create new product.
             response = await productService.createProduct(products);
-            alert(response ? 'Product has been added!' : 'Product creation failed!');
+            successAlert(`${t('alert.Success')}!`, `Product created successfully!`);
         }
 
         fetchProducts(); // Refresh the product list.
@@ -532,9 +528,10 @@ async function saveProduct() {
         toggleForm(); // Hide the form after save.
     } catch (error: any) {
         console.error('Error saving product:', error.message);
-        alert('An error occurred while saving the product.');
+        errorAlert(`${t('alert.Error')}!`, `${t('alert.errorOccurredWhileSavingProduct')}.`);
     }
 }
+
 const productToView = ref<number | null>(null);
 
 function viewProduct(id: number) {
@@ -547,16 +544,21 @@ function viewProduct(id: number) {
     }
 }
 
-
-// Delete product function.
 async function deleteProduct(id: number) {
     try {
         const response = await productService.deleteProduct(id);
-        alert(response ? 'Product has been deleted!' : 'Product deletion failed!');
+
+        if (response) {
+            successAlert(`${t('alert.Success')}!`, `Product has been deleted successfully!`);
+        } else {
+            errorAlert(`${t('alert.Error')}!`, `Product deletion failed!`);
+        }
+
         fetchProducts();
         fetchProductCategory();
     } catch (error: any) {
-        console.error(error.message);
+        console.error('Error deleting product:', error.message);
+        errorAlert(`${t('alert.Error')}!`, `${t('alert.errorOccurredWhileDeletingProduct')}.`);
     }
 }
 
@@ -572,6 +574,26 @@ function editProduct(id: number) {
         console.error(`Product with ID ${id} not found.`);
     }
 }
+
+const searchQuery = ref('');
+
+function sanitizeSearchQuery() {
+    searchQuery.value = searchQuery.value.replace(/[^a-zA-Z]/g, '');
+}
+
+const filteredData = computed(() => {
+    if (!searchQuery.value) {
+        return state.products.data; // Return all products if no search query
+    }
+
+    const firstLetter = searchQuery.value.charAt(0).toLowerCase();
+    const filtered = state.products.data.filter(product =>
+        product.name.toLowerCase().startsWith(firstLetter) // Use the correct property, e.g., 'name'
+    );
+
+    console.log('Filtered Data:', filtered); // Debugging output
+    return filtered;
+});
 
 const showForm = ref(false);
 
@@ -595,4 +617,24 @@ function toggleForm() {
         productToEdit.value = null;
     }
 }
+function filterProductName(event: Event) {
+
+    const input = (event.target as HTMLInputElement).value;
+
+    (event.target as HTMLInputElement).value = input.replace(/[^a-zA-Z\s]/g, '');
+
+    product.value.name = (event.target as HTMLInputElement).value;
+}
+
+function filterBrandName(event: Event) {
+    const input = (event.target as HTMLInputElement).value;
+    const filteredInput = input.replace(/[^a-zA-Z\s]/g, '');
+    (event.target as HTMLInputElement).value = filteredInput;
+    product.value.brand = filteredInput;
+}
+
+function navigateToCreate() {
+    navigateTo("products/create")
+}
+
 </script>

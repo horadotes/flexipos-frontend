@@ -3,26 +3,50 @@
         <main>
 
             <Head>
-                <Title>Category - {{ runtimeConfig.public.appName }}</Title>
+                <Title>Product Category - {{ runtimeConfig.public.appName }}</Title>
             </Head>
 
-            <!-- Add Category Button -->
-            <div class="mt-4 sm:ml-16 sm:mt-3 sm:flex-none mr-6">
-                <button type="button" @click="toggleForm()"
-                    class="block rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    Add Category
-                </button>
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <!--Search Bar-->
+                <div class="relative flex flex-1 ml-8 mt-5">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500"
+                        viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M9 3a6 6 0 11-6 6 6 6 0 016-6zM2 9a7 7 0 1114 0A7 7 0 012 9zm11.293 4.293a1 1 0 00-1.415-1.414L10 12.586l-1.879-1.878a1 1 0 00-1.415 1.414L8.586 14l-1.879 1.879a1 1 0 001.415 1.415L10 15.414l1.879 1.879a1 1 0 001.415-1.415L11.414 14l1.879-1.879a1 1 0 000-1.415z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <input type="text" placeholder="Search" v-model="searchQuery" @input="sanitizeSearchQuery"
+                        class="block w-75 rounded-md border border-gray-400 text-sm pl-8 pr-3 py-1.5" />
+                </div>
+                <!-- Adjustment Button -->
+                <div class="mt-4 sm:ml-16 sm:mt-3 sm:flex-none mr-7">
+                    <button type="button" @click="toggleForm"
+                        class="block rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Add Category
+                    </button>
+                </div>
             </div>
+
+            <!--View Details-->
             <div v-if="categoryToView" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
-                <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                    <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
-                        <div class="flex items-center mb-1 ml-7">
-                            <label class="text-xxs font-medium text-gray-700 w-20 mr-2">Category:</label>
-                            <span>{{ state.categories.data.find(c => c.id ===
-                                categoryToView)?.name }}</span>
-                        </div>
+                <div class="bg-white rounded-lg shadow-lg p-5 w-full max-w-sm">
+                    <div class="text-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Product Category Details</h2>
+                    </div>
+
+                    <!-- Category Details -->
+                    <div class="text-center mt-10 mr-13">
+                        <label class="text-m font-semibold text-gray-700">Category: </label>
+                        <span class="text-m  text-gray-900">
+                            {{ state.categories.data.find(c => c.id === categoryToView)?.name }}
+                        </span>
+                    </div>
+
+                    <!-- Close Button aligned to the right -->
+                    <div class="flex justify-end mt-6">
                         <button @click="categoryToView = null"
-                            class="rounded-md bg-gray-200 px-4 py-2 text-xxs font-semibold text-gray-700 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300">
+                            class="rounded-md bg-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300">
                             Close
                         </button>
                     </div>
@@ -33,19 +57,22 @@
             <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
                 <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
                     <form @submit.prevent="saveCategory">
+                        <div class="text-center mb-7">
+                            <h2 class="text-xl font-semibold text-gray-800">Category Details</h2>
+                        </div>
                         <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
                             <!-- Category Name Field -->
                             <div class="mb-1">
-                                <FormLabel for="categoryname" label="Category Name" class="mr-3" />
+                                <label class="block text-sm font-medium text-gray-700 ml-1 mb-1">Catgory Name</label>
                                 <FormTextField id="categoryname" name="categoryname" v-model="category.name"
-                                    placeholder="Category Name" required />
+                                    placeholder="Category Name" required @input="filterOnlyLetters" />
                                 <FormError :error="v$?.category.isactive?.isactive?.$errors[0]?.$message.toString()" />
                                 <FormError :error="state?.error?.errors?.name?.[0]" />
                             </div>
 
                             <div class="mb-1">
+                                <label class="block text-sm font-medium text-gray-700 ml-1">Status</label>
                                 <FormSelectField v-model="category.isActive" :options="activeInactiveOptions" />
-                                <FormLabel for="isactive" label="isActive" class="mr-3" />
                                 <FormError :error="v$.category.isActive.$errors[0]?.$message.toString()" />
                                 <FormError :error="state?.error?.errors?.isactive?.[0]" />
                             </div>
@@ -68,15 +95,15 @@
             <div>
                 <Alert type="danger" :text="state.error?.message" v-if="state.error" />
                 <div class="table-responsive">
-                    <Table :columnHeaders="state.columnHeaders" :data="state.categories"
+                    <Table :columnHeaders="state.columnHeaders" :data="{ data: filteredData }"
                         :isLoading="state.isTableLoading" :sortData="state.sortData" @sort="sort">
-                        <template #body v-if="!state.isTableLoading && state.categories?.data.length">
-                            <tr v-for="(category, index) in state.categories?.data" :key="index">
+                        <template #body v-if="!(state.isTableLoading || (filteredData && filteredData.length === 0))">
+                            <tr v-for="(category, index) in filteredData" :key="index">
                                 <td class="pl-3">
                                     {{ category.name }}
                                 </td>
                                 <td>
-                                    <span class="pl-3"
+                                    <span class="ml-2"
                                         :class="category.is_active ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
                                         {{ category.is_active ? 'Active' : 'Inactive' }}
                                     </span>
@@ -101,7 +128,7 @@
                                                     d="M17.414 2.586a2 2 0 00-2.828 0l-10 10V16a1 1 0 001 1h3.414l10-10a2 2 0 000-2.828l-1.586-1.586zM5 13l-1.5 1.5V13h1.5zm4.5-4.5L14 4l2 2-4.5 4.5H9.5V8.5z" />
                                             </svg>
                                         </button>
-                                        <button @click="deleteCategory(category.id)"
+                                        <!-- <button @click="deleteCategory(category.id)"
                                             class="text-red-600 hover:text-red-900">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
                                                 fill="currentColor">
@@ -109,7 +136,7 @@
                                                     d="M6 2a2 2 0 00-2 2v1H2v2h1v9a2 2 0 002 2h8a2 2 0 002-2V7h1V5h-2V4a2 2 0 00-2-2H6zm4 12a1 1 0 102 0V8a1 1 0 10-2 0v6zm-3-1a1 1 0 002 0V8a1 1 0 10-2 0v5zm8-1a1 1 0 10-2 0V8a1 1 0 102 0v5z"
                                                     clip-rule="evenodd" />
                                             </svg>
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </td>
                             </tr>
@@ -152,7 +179,7 @@ interface Category {
 const state = reactive({
     columnHeaders: [
         { name: "Product Category Name", sorter: true, key: "categoryName" },
-        { name: "Active", sorter: true, key: "isActive" },
+        { name: "Status", sorter: true, key: "isActive" },
         { name: "Actions", key: "actions" },
     ],
     error: null as Error | null,
@@ -165,7 +192,7 @@ const showForm = ref(false);
 
 onMounted(() => {
     fetchProductCategory();
-    warningAlert('Warning', 'This feature is not yet implemented.');
+    // warningAlert('Warning', 'This feature is not yet implemented.');
 });
 
 const activeInactiveOptions = [
@@ -188,6 +215,7 @@ const category = ref({
     name: '',
     isActive: true,
 });
+
 
 // Pass only the form data to useVuelidate
 const v$ = useVuelidate(rules, { category });
@@ -279,6 +307,15 @@ function viewCategory(id: number) {
     }
 }
 
+function filterOnlyLetters(event: Event) {
+    const input = (event.target as HTMLInputElement).value;
+    // Replace all non-letter characters with an empty string
+    (event.target as HTMLInputElement).value = input.replace(/[^a-zA-Z\s]/g, '');
+    // Update the category name model
+    category.value.name = (event.target as HTMLInputElement).value;
+}
+
+
 // Update category function.
 function editCategory(id: number) {
     const selectedCategory = state.categories.data.find(c => c.id === id);
@@ -320,4 +357,26 @@ function next() {
     fetchProductCategory();
 
 }
+
+const searchQuery = ref('');
+
+function sanitizeSearchQuery() {
+    searchQuery.value = searchQuery.value.replace(/[^a-zA-Z]/g, '');
+}
+
+const filteredData = computed(() => {
+    if (!searchQuery.value) {
+        return state.categories.data; // Return all categories if no search query
+    }
+
+    const firstLetter = searchQuery.value.charAt(0).toLowerCase();
+    const filtered = state.categories.data.filter(category =>
+        category.name.toLowerCase().startsWith(firstLetter) // Use the correct property, e.g., 'name'
+    );
+
+    console.log('Filtered Data:', filtered); // Debugging output
+    return filtered;
+});
+
+
 </script>

@@ -6,10 +6,11 @@
                 <Head>
                     <Title>Bills Payment - {{ runtimeConfig.public.appName }}</Title>
                 </Head>
-                <!-- Search and Add Product Button Container -->
-                <div class="relative flex items-center space-x-4 mt-3">
+                <!-- Add Button and Description -->
+                <div class="sm:flex sm:items-center sm:justify-between">
                     <!-- Search Bar -->
-                    <div class="relative flex flex-1">
+                    <!--Search Bar-->
+                    <div class="relative flex flex-1 ml-8 mt-5">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500"
                             viewBox="0 0 20 20" fill="currentColor">
@@ -17,27 +18,29 @@
                                 d="M9 3a6 6 0 11-6 6 6 6 0 016-6zM2 9a7 7 0 1114 0A7 7 0 012 9zm11.293 4.293a1 1 0 00-1.415-1.414L10 12.586l-1.879-1.878a1 1 0 00-1.415 1.414L8.586 14l-1.879 1.879a1 1 0 001.415 1.415L10 15.414l1.879 1.879a1 1 0 001.415-1.415L11.414 14l1.879-1.879a1 1 0 000-1.415z"
                                 clip-rule="evenodd" />
                         </svg>
-                        <input type="text" placeholder="Search"
-                            class="block w-70 rounded-md border border-gray-400 shadow-sm focus:border-gray-500 focus:ring-gray-500 text-xs pl-8 pr-2 py-1.5" />
+                        <input type="text" placeholder="Search" v-model="searchQuery" @input="sanitizeSearchQuery"
+                            class="block w-75 rounded-md border border-gray-400 text-sm pl-8 pr-3 py-1.5" />
                     </div>
-
-                    <!-- Add Product Button -->
-                    <button @click="navigateToCreate" type="button"
-                        class="rounded-md bg-gray-900 px-3 py-2 text-center text-xxs font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 flex items-center justify-center gap-2">
-                        <PlusIcon class="h-3 w-3" aria-hidden="true" />
-                        New Payment
-                    </button>
+                    <!-- Add Customer Button -->
+                    <div class="mt-4 sm:ml-16 sm:mt-3 sm:flex-none mr-7">
+                        <button type="button" @click="navigateToCreate"
+                            class="block rounded-md bg-gray-900 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            ADD COLLECTION
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Payments List Table -->
-                <div class="mt-4 overflow-x-auto">
+                <div class="mt-4">
                     <!-- Product Table -->
                     <Alert type="danger" :text="state.error?.message" v-if="state.error" />
                     <div class="table-responsive">
-                        <Table :columnHeaders="state.unpaidBillColumnHeader" :data="state.payments"
+                        <Table :columnHeaders="state.unpaidBillColumnHeader" :data="{ data: filteredData }"
                             :isLoading="state.isTableLoading" :sortData="state.sortData" @sort="sort">
-                            <template #body v-if="!state.isTableLoading && state.payments?.data.length">
-                                <tr v-for="(payment, index) in state.payments?.data" :key="index">
+
+                            <template #body
+                                v-if="!(state.isTableLoading || (filteredData && filteredData.length === 0))">
+                                <tr v-for="(payment, index) in filteredData" :key="index">
                                     <td class="pl-3">
                                         {{ payment.prepared_by_id }}
                                     </td>
@@ -45,7 +48,7 @@
                                         {{ payment.customer_id }}
                                     </td>
                                     <td class="pl-3">
-                                        {{ payment.approved_by_id }}
+                                        {{ payment.approvedby }}
                                     </td>
                                     <td class="pl-3">
                                         {{ payment.cancelled_by_id }}
@@ -54,15 +57,15 @@
                                         {{ payment.or_number }}
                                     </td>
                                     <td class="pl-3">
-                                        <span class="pl-3"
+                                        <span class="ml-2"
                                             :class="payment.is_approved ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
-                                            {{ payment.is_approved ? 'Approved' : 'Pending' }}
+                                            {{ payment.is_approved ? 'Approved' : 'DisApproved' }}
                                         </span>
                                     </td>
                                     <td class="pl-3">
-                                        <span class="pl-3"
-                                            :class="payment.is_cancelled ? 'inline-flex items-center rounded-md bg-orange-50 px-2 py-1 text-xs font-medium text-orange-500 ring-1 ring-inset ring-orange-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
-                                            {{ payment.is_cancelled ? 'Cancelled' : 'Pending' }}
+                                        <span class="ml-2"
+                                            :class="payment.is_cancelled ? 'inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20' : 'inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20'">
+                                            {{ payment.is_cancelled ? 'Not Cancelled' : 'Cancelled' }}
                                         </span>
                                     </td>
                                     <td class="pl-3">
@@ -73,11 +76,21 @@
                                     </td>
                                     <td class="pl-3">
                                         <div class="flex space-x-2">
-                                            <button @click="" class="text-gray-600 hover:text-gray-900">
-                                                View
+                                            <button @click="viewPayment(payment)"
+                                                class="text-gray-600 hover:text-gray-900">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                    viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd"
+                                                        d="M12 4.5C8.798 4.5 6 7.057 6 10.5S8.798 16.5 12 16.5 18 13.943 18 10.5 15.202 4.5 12 4.5ZM12 15.5C10.343 15.5 9 14.156 9 12.5S10.343 9.5 12 9.5 15 10.844 15 12.5 13.657 15.5 12 15.5ZM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2ZM12 20C7.03 20 3 15.97 3 12S7.03 4 12 4s9 4.03 9 9-4.03 9-9 9Z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
                                             </button>
                                             <button @click="" class="text-gray-600 hover:text-gray-900">
-                                                Edit
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                    viewBox="0 0 20 20" fill="currentColor">
+                                                    <path
+                                                        d="M17.414 2.586a2 2 0 00-2.828 0l-10 10V16a1 1 0 001 1h3.414l10-10a2 2 0 000-2.828l-1.586-1.586zM5 13l-1.5 1.5V13h1.5zm4.5-4.5L14 4l2 2-4.5 4.5H9.5V8.5z" />
+                                                </svg>
                                             </button>
                                             <button @click="" class="text-red-600 hover:text-red-900">
                                                 Cancel
@@ -89,6 +102,59 @@
                         </Table>
                     </div>
                     <!-- <Pagination :data="state.categories" @previous="previous" @next="next" /> -->
+                </div>
+                <!-- View Details Modal -->
+                <div v-if="paymentToView"
+                    class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
+                    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
+                        <div class="text-center mb-10">
+                            <h2 class="text-xl font-semibold text-gray-800">Payment Details</h2>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 mx-4">
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Prepared By:</label>
+                                <span>{{ paymentToView.prepared_by_id }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Customer ID:</label>
+                                <span>{{ paymentToView.customer_id }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Approved By:</label>
+                                <span>{{ paymentToView.approvedby }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Cancelled By:</label>
+                                <span>{{ paymentToView.cancelled_by_id }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">O.R Number:</label>
+                                <span>{{ paymentToView.or_number }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Is Approved:</label>
+                                <span>{{ paymentToView.is_approved ? 'Yes' : 'No' }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Is Cancelled:</label>
+                                <span>{{ paymentToView.is_cancelled ? 'Yes' : 'No' }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Payment Date:</label>
+                                <span>{{ paymentToView.payment_date }}</span>
+                            </div>
+                            <div class="flex items-center mb-2 ml-12">
+                                <label class="text-xs font-medium text-gray-700 w-36 mr-2">Remarks:</label>
+                                <span>{{ paymentToView.remarks }}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button @click="paymentToView = null"
+                                class="rounded-md bg-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300">
+                                Close
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </main>
         </NuxtLayout>
@@ -132,13 +198,13 @@ function sort(sortingData: { column: string; sort: string }) {
 
 const state = reactive({
     unpaidBillColumnHeader: [
-        { name: "Prepared By", sorter: true, key: "preparedby" },
+        { name: "Prepared_by", sorter: true, key: "preparedby" },
         { name: "Customer Name", sorter: true, key: "customer_id" },
-        { name: "Approved By", sorter: true, key: "approvedby" },
-        { name: "Cancelled By", sorter: true, key: "cancelled_by_id" },
+        { name: "Approved_by", sorter: true, key: "approvedby" },
+        { name: "Cancelled_by", sorter: true, key: "cancelled_by_id" },
         { name: "O.R Number", sorter: true, key: "or_number" },
-        { name: "is Approved", sorter: true, key: "is_approved" },
-        { name: "is Cancelled", sorter: true, key: "is_cancelled" },
+        { name: "isApproved", sorter: true, key: "is_approved" },
+        { name: "isCancelled", sorter: true, key: "is_cancelled" },
         { name: "Payment Date", sorter: true, key: "payment_date" },
         { name: "Remarks", sorter: true, key: "remarks" },
         { name: "Actions", sorter: true, key: "actions" },
@@ -161,6 +227,7 @@ async function fetchEmployees() {
     }
 }
 
+// Function to fetch employees
 async function fetchCustomers() {
     try {
         const response = await customerService.getCustomers();
@@ -186,10 +253,10 @@ async function fetchPayments() {
             const cancelledBy = state.employees.find(emp => (emp as any).id === payment.cancelled_by_id);
             const customer = state.customers.find(cust => (cust as any).id === payment.customer_id);
 
-            payment.prepared_by_id = preparedBy ? `${(preparedBy as any).firstname} ${(preparedBy as any).lastname}` : 'N/A';
-            payment.approved_by_id = approvedBy ? `${(approvedBy as any).firstname} ${(approvedBy as any).lastname}` : 'N/A';
-            payment.cancelled_by_id = cancelledBy ? `${(cancelledBy as any).firstname} ${(cancelledBy as any).lastname}` : 'N/A';
-            payment.customer_id = customer ? `${(customer as any).firstname} ${(customer as any).lastname}` : 'N/A';
+            payment.prepared_by_id = preparedBy ? `${(preparedBy as any).firstname} ${(preparedBy as any).lastname}` : '';
+            payment.approved_by_id = approvedBy ? `${(approvedBy as any).firstname} ${(approvedBy as any).lastname}` : '';
+            payment.cancelled_by_id = cancelledBy ? `${(cancelledBy as any).firstname} ${(cancelledBy as any).lastname}` : '';
+            payment.customer_id = customer ? `${(customer as any).firstname} ${(customer as any).lastname}` : '';
         });
     } catch (error: any) {
         state.error = error;
@@ -200,6 +267,33 @@ async function fetchPayments() {
 function navigateToCreate() {
     navigateTo("collections/create")
 }
+
+const searchQuery = ref('');
+
+function sanitizeSearchQuery() {
+    searchQuery.value = searchQuery.value.replace(/[^a-zA-Z]/g, '');
+}
+
+const filteredData = computed(() => {
+    if (!searchQuery.value) {
+        return state.payments.data;
+    }
+
+    const query = searchQuery.value.toLowerCase();
+    const filtered = state.payments.data.filter(payment =>
+        payment.prepared_by_id?.toLowerCase().includes(query) // Assuming `prepared_by_id` contains the full name
+    );
+
+    console.log('Filtered Data:', filtered); // Debugging output
+    return filtered;
+});
+
+const paymentToView = ref<any>(null); // Store the selected payment details for the modal
+
+const viewPayment = (payment: any) => {
+    console.log("Viewing payment:", payment); // Log the selected payment
+    paymentToView.value = payment;  // Set the selected payment to show its details in the modal
+};
 
 onMounted(() => {
     fetchPayments();

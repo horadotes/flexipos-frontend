@@ -85,7 +85,7 @@
                     <div class="bg-white text-gray-900 text-2xl font-bold text-center rounded py-6 px-4 w-full">
                         <!-- Replace with the dynamic amount of products scanned -->
                         <!-- PUT PRICE HERE -->
-                        {{ formattedTotalAmount }}
+                        {{ calculateFinalTotal.toFixed(2) }}
                     </div>
                 </div>
                 <div v-if="mostRecentItem" class="mt-4">
@@ -123,7 +123,7 @@
                         </li>
                         <li class="mb-1 flex justify-between">
                             <span>Total Discount:</span>
-                            <span>0.00</span>
+                            <span>{{ formattedTotalDiscount }}</span>
                         </li>
                         <li class="mb-1 flex justify-between">
                             <span>VAT:</span>
@@ -139,7 +139,7 @@
                         </li>
                         <li class="mb-1 flex justify-between font-bold">
                             <span>Total Amount Due:</span>
-                            <span> {{ formattedTotalAmount }}</span>
+                            <span> {{ calculateFinalTotal.toFixed(2) }}</span>
                         </li>
                         <li class="mb-1 mt-10 flex justify-between">
                             <span>Cash Tendered:</span>
@@ -299,12 +299,12 @@
         <!-- Add Discount Form -->
         <div v-if="showDiscountForm" class="fixed inset-0 flex items-center justify-center bg-gray-700 bg-opacity-50">
             <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                <form @submit.prevent="">
+                <form @submit.prevent="setDiscountNumber()">
                     <div class="grid grid-cols-1 gap-1 mt-3 mx-2">
                         <!-- Fields -->
                         <div class="mb-1">
                             <FormLabel for="discount" label="Senior ID Number:" class="mr-3" />
-                            <FormTextField id="discount" name="discount" v-model="setQuantityTo.quantity"
+                            <FormTextField id="discount" name="discount" v-model="discountNumber"
                                 placeholder="Senior ID Number" required />
                         </div>
                         <!-- Action Buttons -->
@@ -337,7 +337,7 @@ const { warningAlert } = useAlert();
 const { errorAlert } = useAlert();
 const { t } = useI18n()
 
-// interface area   
+// interface area
 interface Item {
     id: number;
     barcode: string;
@@ -371,6 +371,7 @@ const placeholderText = ref('Enter Barcode');
 const currentTime = ref('');
 const currentDateTime = ref('');
 const barcodeInput = ref('');
+const discountNumber = ref(''); // This will hold the discount number, e.g., senior citizen card number
 const vatRate = 0.12; // Example VAT rate
 const barcodeInputRef = ref<HTMLInputElement | null>(null);
 const itemsPerPage = 16;
@@ -389,11 +390,6 @@ const state = reactive({
     products: [] as Product[],
 });
 
-// computed property to calculate total amount
-const totalAmount = computed(() => {
-    return items.value.reduce((total, item) => total + item.total, 0);
-});
-
 const totalItems = computed(() => {
     return items.value.reduce((total, item) => total + Number(item.quantity), 0);
 });
@@ -408,16 +404,16 @@ const calculateVatable = computed(() => {
     return totalAmount.value - calculateVat.value;
 });
 
-const calculateNet = computed(() => {
-    return (totalAmount.value / (1 + vatRate));
+const totalAmount = computed(() => {
+    return items.value.reduce((total, item) => total + item.total, 0);
 });
 
-const calculateTotalDiscount = computed(() => {
-    // let discountPercentage = 0.20; // 20% discount
-    // let totalAmount = formattedTotalAmount.value;
-    // let discountAmount = Number(totalAmount) * discountPercentage; // Calculate discount amount
-    // return Number(totalAmount) - discountAmount; // Subtract discount amount from total
-    return 0;
+// Reactive discount value that will be applied
+const appliedDiscount = ref(0);
+
+const calculateFinalTotal = computed(() => {
+    const finalAmount = totalAmount.value - Number(formattedTotalDiscount.value);
+    return finalAmount > 0 ? finalAmount : 0; // Ensure the final amount doesn't go below 0
 });
 
 const getCashTendered = computed(() => {
@@ -425,7 +421,7 @@ const getCashTendered = computed(() => {
 });
 
 const calculateChange = computed(() => {
-    return Number(formattedCashTendered.value) - Number(formattedTotalAmount.value);
+    return Number(formattedCashTendered.value) - Number(calculateFinalTotal.value);
 });
 
 const calculateTotalItems = computed(() => {
@@ -441,7 +437,7 @@ const formattedVatable = computed(() => {
 });
 
 const formattedTotalDiscount = computed(() => {
-    return calculateTotalDiscount.value.toFixed(2);
+    return appliedDiscount.value.toFixed(2);
 });
 
 const formattedTotalAmount = computed(() => {
@@ -451,6 +447,17 @@ const formattedTotalAmount = computed(() => {
 const formattedCashTendered = computed(() => {
     return Number(getCashTendered.value).toFixed(2);
 });
+
+watch(discountNumber, (newValue) => {
+    if (newValue && newValue.trim() !== '') {
+        // Apply 20% discount if discountNumber is set
+        appliedDiscount.value = totalAmount.value * 0.20;
+    } else {
+        // Remove discount if no discount number
+        appliedDiscount.value = 0;
+    }
+}, { immediate: true }); // Ensure it runs immediately when the component is mounted
+
 
 // async functions area
 async function fetchProducts() {
@@ -501,6 +508,18 @@ function closeQuantityForm() {
     showQuantityForm.value = false;
     setQuantityTo.value.quantity = ''; // Reset quantity field
 }
+
+// Function to set the discount number and apply the discount
+const setDiscountNumber = () => {
+    if (discountNumber.value && discountNumber.value.trim() !== '') {
+        // Apply 20% discount if discount number is set
+        appliedDiscount.value = totalAmount.value * 0.20;
+    } else {
+        // Remove discount if no discount number
+        appliedDiscount.value = 0;
+    }
+    closeDiscountForm(); // Close the form after setting the discount
+};
 
 function setQuantity(barcode: string, quantity: number) {
     const item = items.value.find(item => item.barcode === barcode);
@@ -616,7 +635,7 @@ let OfficialReceiptNumber = '';
 
 async function savePayment() {
     if (items.value.length > 0) {
-        if (Number(payment.value.cash_tendered) >= totalAmount.value) {
+        if (Number(payment.value.cash_tendered) >= calculateFinalTotal.value) {
             try {
                 const formatDateTime = (date: Date) => {
                     const year = date.getFullYear();
@@ -804,6 +823,8 @@ function printItems() {
         html += '<th>Amount</th>';
         html += '</tr>';
 
+        let quantity = 0;
+
         // Add each item in the list
         items.value.forEach((item) => {
             html += '<tr class="receipt-item">';
@@ -819,14 +840,19 @@ function printItems() {
 
         html += '</table>'; // Close the table
 
-        const subtotal = items.value.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        // Calculate subtotal before discount
+        const subtotalBeforeDiscount = items.value.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+        // Subtract discount from subtotal
+        const discountAmount = parseFloat(formattedTotalDiscount.value) || 0;
+        const subtotalWithDiscount = subtotalBeforeDiscount - discountAmount;
 
         // Add the subtotal and total
         html += '<div class="receipt-total">';
-        html += `<h4>DISCOUNT  <span style="float:right;">${formattedTotalDiscount.value}</span></h4>`;
         html += `<h4>VAT  <span style="float:right;">${formattedVat.value}</span></h4>`;
         html += `<h4>VATABLE  <span style="float:right;">${formattedVatable.value}</span></h4>`;
-        html += `<h4>SUB-TOTAL  <span style="float:right;">${subtotal.toFixed(2)}</span></h4>`; // Right-align subtotal
+        html += `<h4>DISCOUNT  <span style="float:right;">${formattedTotalDiscount.value}</span></h4>`;
+        html += `<h4>SUB-TOTAL  <span style="float:right;">${subtotalWithDiscount.toFixed(2)}</span></h4>`; // Right-align subtotal
         html += `<h4>CASH<span style="float:right;">${formattedCashTendered.value}</span></h4>`; // Right-align cash
         html += '</div>'; // Close receipt-total
 
@@ -836,8 +862,7 @@ function printItems() {
 
         // Add total number of items
         html += '<div style="margin-top: 15px; text-align: left; display: block;">';
-        html += '<h4 class="no-margin margin-left">TOTAL NO OF ITEMS: ' + { calculateTotalItems }
-            + '</h4>';
+        html += `<h4 class="no-margin margin-left" style="text-align: center">TOTAL ITEMS: <span>${totalItems.value}</span></h4>`; // Right-align cash
         html += '</div>';
 
         // Add Buyer details
@@ -847,9 +872,7 @@ function printItems() {
         html += '<h4 class="no-margin margin-left">BUYER TIN: ' + '</h4>';
         html += '<h4 class="no-margin margin-left">BUSINESS STYLE: ' + '</h4>';
         html += '</div>';
-
-        // Receipt footer
-        html += '<div class="receipt-footer">';
+        html += '<div style="text-align: center;">'; // Centering the text
         html += '<h4>Thank you for shopping with us!</h4>';
         html += '</div>';
 
